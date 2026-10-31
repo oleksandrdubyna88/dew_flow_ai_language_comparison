@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Task | 01 of 10 — a program that reads standard input once and writes standard output once |
-| Gate verdict | not yet gated (the document gate, a consultant and the bias review run before the freeze) |
+| Kind | a program that reads standard input once and writes standard output once |
+| Gate verdict | not yet gated |
 | Freeze tag | none yet |
 | Freeze rule | frozen: changes only by a dated amendment before the v2 pre-registration |
-| Amendments | none (section 8) |
+| Amendments | none yet |
 
 Every numbered sentence (**R1** … **R17**) is a requirement. Hidden tests refer to these numbers; nothing outside them is
 tested.
@@ -54,7 +54,9 @@ written.
 The exact values are registered when the hidden suite is calibrated against reference solutions in both stacks, before
 any session, and are given to the test runner, not to the program's author. The registered values are never below these
 floors: **1 second** of wall-clock time per run and **256 MB** of memory. (The registration rule: at least three times
-the wall time of the slower reference, and at least twice the peak memory of the larger reference.)
+the wall time of the slower reference, and at least twice the peak memory of the larger reference.) Memory is judged only
+on a test machine that can read the peak memory of the test's control group (cgroup `memory.peak`). On a machine that
+cannot, peak memory is recorded for information only, and no test passes or fails on memory.
 
 **R12.** A run that exceeds the time limit, exceeds the memory limit, exits with a non-zero status or prints anything
 other than the expected bytes fails that test.
@@ -97,4 +99,4 @@ the same suite; a program that passes them has not thereby passed the hidden tes
 
 ## 8. Amendments
 
-None.
+None yet.
