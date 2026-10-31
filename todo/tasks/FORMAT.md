@@ -1,6 +1,6 @@
 # Task spec and sample format
 
-Format version: 2
+Format version: 2.1
 Gate verdict: not yet gated
 Freeze tag: none yet
 
@@ -53,11 +53,11 @@ unique, contiguous (no id missing between 1 and n) and, until the freeze, in asc
 Held-out cases cite these ids; nothing outside them is tested.
 
 **A requirement's span.** A requirement runs from its `**R<n>.**` to the next requirement or the next heading of any
-level. Every paragraph, list and table in that span belongs to it: a table is part of the requirement it follows, and so
-is a lead-in line before the table (`Type gauge:`) or a sentence after it. Outside every span stand only F-REQ (before
-section 1), the lead of section 6 with the samples and the prose that explains how a sample is built, and section 8. A
-table or a normative sentence anywhere else is a defect of the spec; prose outside a span explains and never adds a
-requirement.
+level. Every paragraph, list, table and fenced code block in that span belongs to it: a table or a code block (a
+grammar, say) is part of the requirement it follows, and so is a lead-in line before it (`Type gauge:`) or a sentence
+after it. Outside every span stand only F-REQ (before section 1), the lead of section 6 with the samples and the prose
+that explains how a sample is built, and section 8. A table, a code block or a normative sentence anywhere else is a
+defect of the spec; prose outside a span explains and never adds a requirement.
 
 **Stable after the freeze: append only.** An id is never renumbered and never reused. An amendment that adds a
 requirement gives it the next free id, `R(n+1)`, placed in the section it belongs to, so after an amendment the ids may
@@ -105,8 +105,10 @@ word for word into the section given, inside a requirement's span wherever the t
 compares them after collapsing every run of spaces and line breaks to one space, so a spec may wrap them at any width. A
 slot in braces is the only part that varies, and only with the values the slot allows.
 
-**`{ref}` slots** take one R-id (`R5`), a range (`R5–R7`, with an en dash), or a list of ids and ranges of any length,
-separated by commas with `and` before the last: `R5 and R7`, `R8, R11, R14, R17 and R32`, `R5–R7, R9 and R12`.
+**`{ref}` slots** take one R-id (`R5`), or `any of` followed by a range or a list: a range is `R5–R7` (with an en
+dash), and a list holds ids and ranges of any length, separated by commas with `and` before the last. So `R5`,
+`any of R5–R7`, `any of R5 and R7`, `any of R8, R11, R14, R17 and R32`, `any of R5–R7, R9 and R12`. `{eref}` slots take
+the same forms without `any of`.
 
 | Id | Kinds | Where | Slots |
 |---|---|---|---|
@@ -119,12 +121,13 @@ separated by commas with `and` before the last: `R5 and R7`, `R8, R11, R14, R17 
 | F-EXIT-O | olympiad | section 3, in an R | none |
 | F-PORT | daemon and web that listen on a port | section 2, in an R | none |
 | F-READY | daemon, web | section 2, in an R | `{readiness}`: one of two phrases (2.4); `{T}`: whole seconds (2.5) |
-| F-STOP | daemon, web | section 2, in an R | `{G}`: whole seconds (2.5) |
+| F-STOP | daemon, web | section 2, in an R | `{which}` (2.4); `{G}`: whole seconds (2.5) |
+| F-EOF | daemon, web whose spec defines an end of the test at the end of its input | section 2, in an R | `{eref}`: what the program does at the end of its input; `{G}` as in F-STOP |
 | F-TIMING | daemon, web whose T or G is not the series default | section 2, in the same R as F-READY or F-STOP | `{what}`, `{D}`, `{V}`, `{reason}` (2.5) |
 | F-STDOUT-D | daemon, web | section 3, in an R | none |
 | F-BYTES-D | daemon | section 3, in an R | none |
 | F-BYTES-W | web | section 3, in an R | none |
-| F-JSON | daemon, web whose reply bodies are compared as JSON values | section 3, in an R | `{what}`: the replies it covers, in words |
+| F-JSON | daemon, web whose replies, or some of them, are compared as JSON values | section 3, in an R | `{subject}` (2.4) |
 | F-LIMITS-O | olympiad | section 4, in an R | none |
 | F-LIMITS-D | daemon, web | section 4, in an R | none |
 | F-LOAD | daemon, web | section 4, in the same R as F-LIMITS-D | `{size}`, `{duration}` (2.4) |
@@ -262,10 +265,18 @@ standard output`, where `{line}` is the line in a code span; `{T}` is whole seco
 The program is ready when {readiness}. A test waits at most {T} seconds for readiness; a program that is not ready by then fails that test.
 ```
 
-F-STOP. `{G}` is the grace period in whole seconds (2.5).
+F-STOP. `{which}` is `A test`, or, in a task that also carries F-EOF, `A test that does not end at the end of its
+input`; `{G}` is the grace period in whole seconds (2.5).
 
 ```text
-A test ends by sending the signal SIGTERM to the program. The program must then exit with status 0 within {G} seconds, leaving no process it started still running. A program still running after {G} seconds is killed and fails that test, and so does one that exits with another status or leaves a process running.
+{which} ends by sending the signal SIGTERM to the program. The program must then exit with status 0 within {G} seconds, leaving no process it started still running. A program still running after {G} seconds is killed and fails that test, and so does one that exits with another status or leaves a process running.
+```
+
+F-EOF, for a program that reads standard input and whose spec defines what it does when that input ends. `{eref}` names
+the requirements that say what the program does then; `{G}` is the same grace period as F-STOP's.
+
+```text
+A test may instead end at the end of its input: it closes the program's standard input, and the program then does what {eref} says and must exit with status 0 within {G} seconds of the end of its input, leaving no process it started still running. A program still running after {G} seconds is killed and fails that test, and so does one that exits with another status or leaves a process running.
 ```
 
 F-STDOUT-D:
@@ -286,16 +297,19 @@ F-BYTES-W:
 Every reply is compared on its status code, on each response header that a requirement of this spec names, and on its body; other headers are not compared. The body is compared byte for byte, except where a requirement of this spec names another comparison. Nothing else is normalized.
 ```
 
-F-JSON, the one other body comparison a spec may name:
+F-JSON, the one other comparison a spec may name. `{subject}` says what it covers: for a web task `The body of` and the
+replies in words (`The body of every reply`); for a daemon the replies or output lines in words (`Each line of standard
+output that R12 describes`).
 
 ```text
-The body of {what} is compared as a JSON value: the members of an object may come in any order, numbers are compared by their exact decimal value with no rounding (so `2` equals `2.0` and `-0` equals `0`, and two numbers that differ in any digit differ), and whitespace outside strings is ignored; arrays keep their order unless a requirement says otherwise.
+{subject} is compared as a JSON value: the members of an object may come in any order, numbers are compared by their exact decimal value with no rounding (so `2` equals `2.0` and `-0` equals `0`, and two numbers that differ in any digit differ), and whitespace outside strings is ignored; arrays keep their order unless a requirement says otherwise.
 ```
 
-**F-BYTES-W against F-JSON.** For every reply that F-JSON's `{what}` covers, F-JSON's comparison replaces the
+**F-BYTES-W against F-JSON.** For every reply that F-JSON's `{subject}` covers, F-JSON's comparison replaces the
 byte-for-byte body comparison of F-BYTES-W (or of F-BYTES-D); the status and the named headers are still compared as
-F-BYTES-W says. Every other reply's body stays byte for byte. In the scenario files the covered replies carry
-`body json`, every other reply `body <str>` or `body empty`: the transcript's body form is the comparison (5.2).
+F-BYTES-W says. Every other reply's body stays byte for byte. In the scenario files the covered HTTP replies carry
+`body json`, every other reply `body <str>` or `body empty`; a covered daemon reply or output line is the entry
+`recv <conn> json <JSON text>`, every other one `recv <conn> <str>`: the transcript's form is the comparison (5.2).
 
 A field whose value the program chooses (an id, a token, a timestamp) is named in a requirement with the form it must
 have — for example "the `id` member is a UUID; it is compared by its form, and every later reply that names the same
@@ -347,7 +361,9 @@ The same {k} scenarios are in `samples/`, one scenario file and one expected-tra
   `{what}` is `readiness` or `the grace period`; `{D}` is `10` or `5`; `{V}` is the task's value; `{reason}` is a clause
   that names the task's own cause, never a stack.
 - **Where the runner reads them.** Every scenario of the task, visible or hidden, writes T as the `within` of its `start`
-  and G as the `within` of the `wait-exit` that follows `signal TERM` (4.2, 4.4). The runner takes them from there; when
+  and G as the `within` of the first `wait-exit` after its end trigger — `signal TERM`, or `close stdin` in a task that
+  carries F-EOF (4.4); that deadline is measured from the trigger, not from the start of the `wait-exit` step. The runner
+  takes them from there; when
   it is also given the task's registered T and G, a scenario whose values differ is refused as a format error and never
   re-timed. A conformance check requires every visible scenario's values to equal the spec's.
 - Every other deadline is a step deadline: the step's own `within`, or the file's `default within` (4.3).
@@ -413,7 +429,10 @@ Section 6 of a spec shows every visible sample, and only those, with the same by
 
 - **Olympiad:** the lead sentence, then a table `| Id | Standard input | Expected standard output |` with one row per
   sample, each cell one code span. Bytes are shown as they are, except that each line feed is shown as `⏎`; a cell may
-  show only printable ASCII and the space. A sample that cannot be shown that way, or is longer than 200 bytes, shows
+  show only printable ASCII and the space. A cell is a code span of one backtick when its bytes hold no backtick and do
+  not both begin and end with a space; otherwise it is a code span of two backticks with one space added inside each
+  end (`` `` a`b `` ``). In either form a `|` is written `\|`, which the table reads as `|`. A sample that cannot be shown
+  these ways (bytes that are only spaces or hold two backticks in a row, another byte, or more than 200 bytes) shows
   `<size> bytes, see samples/<id>.in` (or `.out`) in its cell instead. Prose after the table may explain how a sample is
   built.
 - **Daemon and web:** the lead sentence, then for each sample a `### <id>` sub-section with two fenced code blocks, the
@@ -483,9 +502,12 @@ start ready stdout <str> within <T>
 adds nothing else. The test machine gives the runner the series' base environment: the same for every task and for both
 stacks apart from a few documented runtime settings of each stack, with `LANG` and `LC_ALL` set to `de_DE.UTF-8`.
 
-The program's standard input is a pipe that stays open and receives only what the scenario sends to `stdin`. Its
-standard output, when no step reads `stdout`, and its standard error are drained and kept with the test's record, so the
-program never blocks on a full pipe (bounds in 4.6).
+The program's standard input is a pipe that stays open and receives only what the scenario sends to `stdin`. The runner
+reads the program's standard output and standard error continuously, so the program never blocks on a full pipe. When a
+step of the scenario reads `stdout`, **every byte of standard output is kept, in order**, from the start (after the
+readiness line when `ready stdout` is used): a `recv stdout` reads the bytes no earlier step has read, whenever the
+program wrote them, also after the program has exited. When no step reads `stdout`, standard output, like standard error,
+is only kept with the test's record (bounds in 4.6).
 
 ### 4.3 Steps
 
@@ -498,13 +520,13 @@ waiting step, measured from the moment the step starts. The *entry* column names
 | `send <conn> <str> [split <o1>[,<o2>…] pause <d>] [within <d>]` | writes the joined bytes in one write; with `split`, writes them in pieces cut at the given offsets into the joined bytes (strictly increasing, each 0 < o < length), sleeping `pause` between pieces; completes when every byte is written | none |
 | `request <conn> <METHOD> <str>` | starts an HTTP request on an `http` connection, the string being the target (it begins with `/`); the `header <str> <str>` lines after it add or replace headers, and at most one `body <str>` or `body json <JSON text>` line gives the body; the request is written when the next other statement is reached | none |
 | `recv <conn> <mode> [chunk <bytes> pause <d>] [capture …]… [within <d>]` | reads one reply (modes below); with `chunk`, reads at most that many bytes per read and sleeps `pause` between reads | one `recv` or `reply` entry; `lines <k>` adds k entries |
-| `expect <conn> quiet for <d>` | checks that during that time no byte arrives and the program does not close the connection | `quiet <conn>` |
-| `expect <conn> closed [within <d>]` | checks that the program closes the connection: end of stream with no byte before it | `closed <conn>` |
+| `expect <conn> quiet for <d>` | checks that during that time no byte arrives and the program does not close the connection; allowed on `stdout` too | `quiet <conn>` |
+| `expect <conn> closed [within <d>]` | checks that the program closes the connection: end of stream with no byte before it; on `stdout`, the end of standard output | `closed <conn>` |
 | `close <conn>` | closes the connection; `close stdin` ends the program's standard input | none |
 | `shutdown <conn>` | closes the sending half of a TCP connection; reading goes on | none |
 | `sleep <d>` | waits; it has no deadline and takes no `within` (one is a format error); its time counts toward the test bound of 4.6 | none |
 | `signal TERM` | sends SIGTERM to the program | none |
-| `wait-exit within <d>` | waits for the program to exit; at the deadline the runner kills it and its process group | `exit <status>` |
+| `wait-exit within <d>` | waits for the program to exit, or records the exit it has already made; at the deadline the runner kills it and its process group | `exit <status>` |
 
 **Request serialisation and default headers.** The runner writes `<METHOD> <target> HTTP/1.1`, then its two default
 headers — `Host: 127.0.0.1:<PORT>`, and `Content-Length: <n>` when there is a body — then the `header` lines in order as
@@ -527,10 +549,11 @@ program closes the connection.
 |---|---|
 | `bytes <n>` | exactly the next n bytes |
 | `until <str> [count <k>]` | every byte up to and including the k-th next occurrence of the delimiter (k = 1 by default) |
-| `lines <k>` | the next k lines, each ending with a line feed; each line is its own entry |
+| `lines <k>` | the next k lines, each ending with a line feed; each line, its line feed included, is its own entry |
 | `eof` | every byte up to the end of the stream |
 
-Bytes that arrived beyond the reply stay buffered for the next `recv` on that connection, so pipelined replies are read
+A reply's bytes are every byte its mode delimits, the delimiter and the final line feed included. Bytes that arrived
+beyond the reply stay buffered for the next `recv` on that connection, so pipelined replies are read
 one step at a time. On an `http` connection `recv` takes no mode: the reply is one whole HTTP response — status line,
 headers, and a body delimited by `Content-Length`, by chunked transfer coding (which the runner decodes) or by the end of
 the connection; an interim `1xx` response is skipped.
@@ -548,8 +571,8 @@ string, a JSON string gives its UTF-8 bytes and a number gives its digits as wri
 
 **Failure.** A waiting step that misses its deadline records what it saw (5.1) and the scenario goes on, so the report
 shows every later entry too. These failures end the scenario at once: the program is not ready in time, a connection is
-still refused at its deadline, the program exits before the last step, a capture fails, a buffer overflows (4.6), and
-the test bound is reached (4.6). The runner then stops the program (SIGTERM, then SIGKILL to its process group after the
+still refused at its deadline, the program exits early (4.4), a capture fails, a buffer overflows (4.6), and the test
+bound is reached (4.6). The runner then stops the program (SIGTERM, then SIGKILL to its process group after the
 deadline of the last `wait-exit`, or 5 s when there is none).
 
 ### 4.4 Groups and the end
@@ -571,9 +594,17 @@ end
 - `repeat <count> <name> … end` runs its steps count times (1 ≤ count ≤ 100 000) with the variable `name` bound to `0`,
   `1`, … in decimal. Repeats may nest, and may hold a `together` group; a `together` group holds no `repeat`.
 
-The scenario's last statement is `wait-exit`, always with its `within`. A scenario that tests the stop sends
-`signal TERM` just before it, and that `within` is the task's grace period G; one where the program ends by itself (for
-example after `close stdin`, where the spec says so) waits without the signal, for the deadline its spec states.
+**The end.** A scenario has exactly one `wait-exit`, always with its `within`. Before it stands the scenario's **end
+trigger**: `signal TERM`, or `close stdin` for a program that ends at the end of its input (F-EOF) — whichever of the two
+comes first. The `within` of the `wait-exit` is the task's grace period G, measured from the trigger.
+
+- **Between the trigger and `wait-exit`**, and after `wait-exit`, only `recv`, `expect`, `sleep` and `close` may stand:
+  the steps that read what the program wrote (on `stdout` above all: the lines it writes when it stops) or wait. Nothing
+  more is sent to the program.
+- **An exit after the trigger is not early.** The runner records it, keeps every byte the program wrote before it, and
+  lets the later steps read those bytes in order; a `recv` that needs more than the program wrote fails with
+  `eof <conn> "…"`. The `wait-exit` then records the exit already made.
+- **An exit before the trigger is early**: the scenario ends with `early-exit <status>`.
 
 ### 4.5 Keywords
 
@@ -606,7 +637,8 @@ count times, as in the script.
 | Entry | Produced by | Holds |
 |---|---|---|
 | `ready` | `start` | — |
-| `recv <conn> <str>` | `recv` on `tcp` or `stdout` | the reply's bytes |
+| `recv <conn> <str>` | `recv` on `tcp` or `stdout` | the reply's bytes, compared as bytes |
+| `recv <conn> json <JSON text>` | `recv` on `tcp` or `stdout` | the reply's bytes, compared as one JSON value (5.2) |
 | `reply <conn> <status>` followed by `header <str> <str>` lines and exactly one `body …` line | `recv` on `http` | the status code, the headers to compare, the body: `body <str>`, `body json <JSON text>` or `body empty` |
 | `quiet <conn>` | `expect … quiet` | — |
 | `closed <conn>` | `expect … closed` | — |
@@ -625,7 +657,7 @@ match an expected entry:
 | `open <conn>` | the connection was still open at the deadline of `closed` |
 | `bad-reply <conn> <str>` | the bytes are not an HTTP response |
 | `overflow <conn>` | the connection's unread bytes passed the bound of 4.6 |
-| `early-exit <status>` | the program exited before the last step |
+| `early-exit <status>` | the program exited before the scenario's end trigger (4.4) |
 | `exit-timeout` | the program was still running at the deadline of `wait-exit` and was killed |
 | `exit signal <NAME>` | the program ended by a signal |
 | `capture-failed <name>` | a capture found nothing of its form |
@@ -646,14 +678,19 @@ The complete list of the transcript's words: `transcript`, `ready`, `recv`, `rep
 The actual transcript, expanded, must hold the same number of entries as the expected one, expanded, and each actual
 entry must match the expected entry at its position (or its group, 5.4); then every check must hold (5.5).
 
-- **Byte-exact by default.** A `recv` entry matches when its bytes equal the expected bytes, every variable substituted,
-  every normalised field (5.3) matched by its form. `exit`, `ready`, `quiet` and `closed` match exactly.
+- **Byte-exact by default.** A `recv <conn> <str>` entry matches when its bytes — every byte the `recv` mode delimited,
+  the delimiter and the final line feed included — equal the expected bytes, every variable substituted, every normalised
+  field (5.3) matched by its form. `exit`, `ready`, `quiet` and `closed` match exactly.
+- **A JSON `recv` entry**, `recv <conn> json <JSON text>`, matches when the reply's bytes, read as UTF-8, are one JSON
+  value — whitespace around it, the final line feed included, means nothing — that matches the expected JSON value by the
+  rules below. It is for a program whose replies or output lines a requirement compares as JSON values (F-JSON);
+  byte-exact stays the default.
 - **An HTTP `reply`** matches when the status code is equal; when each `header` line's header is present (names compared
   without regard to case) and its value — the values of every occurrence joined by `, ` in order, each without
   surrounding spaces and tabs — equals the expected bytes; and when the body matches. Headers that the entry does not
   list are not compared. **The body form decides the body comparison:** `body <str>` compares the decoded body byte for
   byte; `body empty` requires a body of zero bytes; `body json` compares JSON values. There is no other body comparison.
-- **JSON values** (`body json`): the actual body must be one valid JSON value, with no member name repeated in one object
+- **JSON values** (`body json`, `recv … json`): the actual body or reply must be one valid JSON value, with no member name repeated in one object
   and no `NaN` or `Infinity`. **Every JSON number is read as an exact decimal from the digits written** — an integer as an
   integer of any size, any other number as an exact decimal fraction, never as a binary floating-point number — and two
   numbers match when their exact values are equal: `2` matches `2.0` and `2.00`, `-0` matches `0`, `1e2` matches `100`,
@@ -662,8 +699,10 @@ entry must match the expected entry at its position (or its group, 5.4); then ev
   strings match by their characters; `true`, `false` and `null` match themselves; whitespace outside strings means
   nothing. Inside the expected JSON, a string whose whole content is `${name}` matches a value equal to the variable's (a
   JSON value keeps its type; a captured byte string matches a JSON string with those characters), and a string whose
-  whole content is a normalised field matches by that field's rule. A literal string of exactly that shape cannot be
-  expected with `body json`; use `body <str>`.
+  whole content is a normalised field matches by that field's rule (a number field such as `${:int}` then matches a JSON
+  number). **A string that holds fields among literal text** — a fixed prefix and a field, `"eyJhbGciOi….${:token}"`, or
+  several of each — matches a JSON string whose characters match it the way a byte entry does: the literal text exactly,
+  each field by its form, the shortest run first. A literal `${` cannot be expected inside `body json`; use `body <str>`.
 
 ### 5.3 Normalised fields
 
@@ -678,7 +717,8 @@ A normalised field stands, inside an expected string or JSON string, for a value
 | `${:uuid}` | 8, 4, 4, 4 and 12 hex digits joined by hyphens, either case |
 | `${:token}` | `[A-Za-z0-9._~-]+` |
 | `${:ts}` | a UTC time `YYYY-MM-DDThh:mm:ss`, optionally `.` and 1 to 9 digits, then `Z` |
-| `${:ts~<duration>}` | a `${:ts}` within that duration of the runner's UTC clock at the moment the entry was recorded |
+| `${:ts.<d>}` | a `${:ts}` with exactly d fraction digits, d from 0 to 9 (`${:ts.0}`: none, and no `.`; `${:ts.3}`: milliseconds) |
+| `${:ts~<duration>}`, `${:ts.<d>~<duration>}` | a `${:ts}` (or `${:ts.<d>}`) within that duration of the runner's UTC clock at the moment the entry was recorded |
 | `${:num <decimal> <tolerance>}` | a decimal number (`-?[0-9]+(\.[0-9]+)?`; in JSON, a number) within the tolerance of the decimal, in exact decimal arithmetic |
 
 **A binding field**, `${:<type>=<name>}` (for example `${:int=a1}` or `${:token=r${i}}`), matches like `${:<type>}` and
@@ -708,12 +748,14 @@ Some requirements relate values to one another rather than fixing each one: the 
 different, or a final value equals the number of operations sent. The transcript states such a relation with **checks**,
 written after the last entry; a check produces no entry.
 
-- `check distinct <name> [<name> …]` — the bound values are pairwise distinct: as bytes, or as exact JSON values. A name
-  may end in `*` to stand for every binding name with that prefix (`r*`).
-- `check equal <name> <decimal | name>` — the bound value equals the decimal, or the other bound value, in exact decimal
-  arithmetic.
+- `check distinct <name> [<name> …]` — the values are pairwise distinct: as bytes, or as exact JSON values. A name may
+  end in `*` to stand for every binding and capture name with that prefix (`r*`).
+- `check equal <name> <decimal | name | str>` — the value equals the decimal (in exact decimal arithmetic), the other
+  value, or the string: a string matches a byte value with those bytes or a JSON string with those characters, never a
+  number.
 
-Checks run after every entry has matched, in file order; each names only bindings made by fields of the transcript.
+A check names binding fields of the transcript and `capture` variables of the script alike; both are bound once, in one
+namespace. Checks run after every entry has matched, in file order.
 For example, three requests that must each get a fresh token:
 
 ```text
@@ -1001,3 +1043,31 @@ here with the tasks it touches.
 - v2 · 2026-10-31 · draft — the maintainers' sections (conformance check, amendment rules, the decisions' changelog)
   moved out of this document into a maintainers' document that no workspace or run base carries; this changelog keeps
   only what changed in the format.
+- v2.1 · 2026-10-31 · draft — version: `Format version: 2.1`, still before the gate. The grammar stays version 2
+  (`scenario 2` / `transcript 2`): every change below adds to it, and no v2 file reads differently.
+- v2.1 · 2026-10-31 · draft — the end of a scenario: the end trigger is `signal TERM` or `close stdin`, whichever comes
+  first; an exit after it is not early, every byte the program wrote before it stays readable by later steps, and
+  `early-exit` applies only to an exit before the trigger (4.3, 4.4, 5.1).
+- v2.1 · 2026-10-31 · draft — steps between the trigger and `wait-exit`: `recv`, `expect`, `sleep` and `close` may stand
+  there and after `wait-exit`; G binds to the first `wait-exit` after the trigger and is measured from the trigger (2.5,
+  4.4).
+- v2.1 · 2026-10-31 · draft — F-EOF: a fixed sentence for a program whose spec defines an end at the end of its input,
+  with the same G; F-STOP's opening becomes the slot `{which}`, `A test` or, beside F-EOF, `A test that does not end at
+  the end of its input` (2.1, 2.4).
+- v2.1 · 2026-10-31 · draft — JSON `recv` entries: `recv <conn> json <JSON text>` compares a TCP or standard-output reply
+  as one JSON value; byte-exact stays the default; F-JSON's opening becomes the slot `{subject}`, so it covers output
+  lines as well as HTTP bodies (2.4, 5.1, 5.2).
+- v2.1 · 2026-10-31 · draft — standard output: when a step reads `stdout`, every byte is kept in order and a `recv stdout`
+  reads what no earlier step read, whenever it was written (4.2).
+- v2.1 · 2026-10-31 · draft — `expect stdout quiet` and `expect stdout closed` are allowed (4.3).
+- v2.1 · 2026-10-31 · draft — an entry's bytes include its delimiter and its final line feed, `lines` entries too (4.3,
+  5.2).
+- v2.1 · 2026-10-31 · draft — `{ref}` lists and ranges read `any of …` (`violates any of R8, R11 and R32`); a single id
+  stays bare (2.1).
+- v2.1 · 2026-10-31 · draft — fields among literal text inside a JSON string (`"<prefix>.${:token}"`), and `${:ts.<d>}`
+  for a time with exactly d fraction digits (5.2, 5.3).
+- v2.1 · 2026-10-31 · draft — checks name `capture` variables as well as binding fields, in one namespace, and
+  `check equal` takes a string (5.5).
+- v2.1 · 2026-10-31 · draft — olympiad sample cells: `|` written `\|`, a backtick inside a two-backtick code span with
+  one space inside each end, and the size fallback for what neither form shows (3.4).
+- v2.1 · 2026-10-31 · draft — a fenced code block belongs to the requirement whose span holds it, like a table (1.3).
