@@ -54,18 +54,20 @@ written.
 The exact values are registered when the hidden suite is calibrated against reference solutions in both stacks, before
 any session, and are given to the test runner, not to the program's author. The registered values are never below these
 floors: **1 second** of wall-clock time per run and **256 MB** of memory. (The registration rule: at least three times
-the wall time of the slower reference, and at least twice the peak memory of the larger reference.) Memory is judged only
-on a test machine that can read the peak memory of the test's control group (cgroup `memory.peak`). On a machine that
-cannot, peak memory is recorded for information only, and no test passes or fails on memory.
+the wall time of the slower reference, and at least twice the peak memory of the larger reference.) Memory is measured
+as the peak memory of the program's own control group (cgroup `memory.peak`), which counts the program and every
+process it starts, including the page cache and kernel memory charged to them, with no swap. A run whose memory reaches
+the limit is stopped and fails that test. The tests run only on a machine that can read this peak, and no other
+measurement of memory passes or fails a test.
 
 **R12.** A run that exceeds the time limit, exceeds the memory limit, exits with a non-zero status or prints anything
 other than the expected bytes fails that test.
 
 ## 5. Build and run — the workspace contract
 
-**R13.** The workspace holds `STATEMENT.md`, `samples/`, `build.sh`, `run.sh`, `PACKAGES.md` and the toolchain pin
-files of the stack. These are frozen inputs: do not change, rename or remove them. The program's sources go where
-`build.sh` and `run.sh` expect them; the two scripts say where.
+**R13.** The workspace holds `STATEMENT.md`, `samples/`, `runner/`, `build.sh`, `run.sh`, `PACKAGES.md` and the
+toolchain pin files of the stack. These are frozen inputs: do not change, rename or remove them. The program's sources
+go where `build.sh` and `run.sh` expect them; the two scripts say where.
 
 **R14.** `bash build.sh`, run in the workspace directory, builds the program with no network access and with no
 package outside the set listed in `PACKAGES.md`. It must exit 0 within 600 seconds. It runs once before the tests; a
@@ -73,7 +75,10 @@ build that does not exit 0 fails every test.
 
 **R15.** `bash run.sh`, run in the workspace directory with no arguments, starts the built program once: the test's
 input is its standard input, its standard output is collected whole, its exit status is read. One fresh process per
-test; nothing carries over from one run to the next.
+test; nothing carries over from one run to the next. `run.sh` ends by replacing itself with the program (`exec`), so the
+process the tests start, signal and measure is the program itself. Every test gives the program the same base
+environment, identical for both stacks apart from a few documented runtime settings of each stack: in it `LANG` and
+`LC_ALL` are `de_DE.UTF-8`, and nothing else selects a locale.
 
 **R16.** The tests run offline, on a pristine copy of the workspace, after the build. The program must not depend on
 the network, on files outside the workspace, or on anything written during an earlier run.
@@ -82,6 +87,7 @@ the network, on files outside the workspace, or on anything written during an ea
 
 The same three cases are in `samples/`, one input file and one expected-output file per case (`samples/<id>.in`,
 `samples/<id>.out`). The bytes below are exact; `⏎` marks the single line feed that ends each line.
+`python3 -I runner/run_samples.py samples/` builds the program and runs them.
 
 | Id | Standard input | Expected standard output |
 |---|---|---|
