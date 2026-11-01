@@ -60,15 +60,17 @@ This section is the only place in the repository that names a source; it is remo
 
 **Known tasks.**
 
-- Task 01 is adapted from the CSES Problem Set problem "Weird Algorithm" (https://cses.fi/problemset/task/1068) by Antti Laaksonen, used under CC BY-NC-SA 4.0.
-- Task 02 is adapted from the CSES Problem Set problem "Counting Rooms" (https://cses.fi/problemset/task/1192) by Antti Laaksonen, used under CC BY-NC-SA 4.0.
-- The two files `todo/tasks/01-descent-to-one.md` and `todo/tasks/02-open-areas.md` are adaptations of CSES Problem Set
-  material and are therefore licensed under CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/), not
-  under the repository's MIT licence.
-- Task 05 describes a subset of the RESP wire protocol in its own words; the protocol is specified at https://redis.io/docs/latest/develop/reference/protocol-spec/.
-- Task 06 is adapted from the RealWorld "Conduit" API specification (https://github.com/gothinkster/realworld), used under the MIT licence; its notice is reproduced below.
-- Task 09's problem idea is based on IOI 2018 Werewolf (https://stats.ioinformatics.org/tasks/2018/werewolf); its statement is written wholly in our own
-  words and copies no text.
+Task 01 is adapted from the CSES Problem Set problem "Weird Algorithm" (https://cses.fi/problemset/task/1068) by Antti Laaksonen, used under CC BY-NC-SA 4.0.
+
+Task 02 is adapted from the CSES Problem Set problem "Counting Rooms" (https://cses.fi/problemset/task/1192) by Antti Laaksonen, used under CC BY-NC-SA 4.0.
+
+The files todo/tasks/01-descent-to-one.md and todo/tasks/02-open-areas.md adapt CSES Problem Set material and are therefore licensed under CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/), not under the repository's MIT licence.
+
+Task 05 describes a subset of the RESP wire protocol in its own words; the protocol is specified at https://redis.io/docs/latest/develop/reference/protocol-spec/.
+
+Task 06 is adapted from the RealWorld "Conduit" API specification (https://github.com/gothinkster/realworld), used under the MIT licence; its notice is reproduced below.
+
+Task 09's problem idea is based on IOI 2018 Werewolf (https://stats.ioinformatics.org/tasks/2018/werewolf); its statement is written wholly in our own words and copies no text.
 
 The RealWorld notice, as read on 2026-11-01:
 
