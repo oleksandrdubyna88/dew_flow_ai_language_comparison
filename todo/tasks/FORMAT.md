@@ -660,10 +660,10 @@ The pilot spec's third sample, n = 7. The spec's table row reads:
 The runner feeds the 2 bytes to `bash run.sh` and compares the program's standard output with the 45 bytes, byte for
 byte (F-BYTES-O): a missing final line feed or a trailing space fails the case.
 
-### 6.2 Daemon — a toy key-value store in RESP framing
+### 6.2 Daemon — a toy key-value store with length-prefixed framing
 
-The toy: three commands, `PING` → `+PONG`, `SET <key> <value>` → `+OK`, `GET <key>` → the value as a bulk string, each a
-RESP array of bulk strings. The scenario covers a SET split across two partial writes (with a check that nothing comes
+The toy: three commands, `PING` → `+PONG`, `SET <key> <value>` → `+OK`, `GET <key>` → the value as a bulk string, each an
+array of length-prefixed strings. The scenario covers a SET split across two partial writes (with a check that nothing comes
 back early), two commands pipelined in one write, a write cut at offsets by `split`, and a slow reader that must not stop
 the server from serving another client.
 
@@ -671,8 +671,8 @@ the server from serving another client.
 
 ```text
 scenario 1
-# Illustrative only: a toy key-value store with PING, SET and GET in RESP
-# framing. It is not a task of this repository and fixes nothing about one.
+# Illustrative only: a toy key-value store with PING, SET and GET in a
+# length-prefixed framing. It is not a task of this repository and fixes nothing about one.
 default within 2s
 start ready port within 10s
 connect c1 tcp
@@ -826,9 +826,9 @@ FAIL x3 — entry 3 of 7 differs
 ## 7. Conformance (for the maintainers)
 
 A spec conforms to this format when a checker finds all of the following. The checker is the spec conformance check, a
-tool of the bench plan's stories for the visible samples and for this document (E1.S6, E1.S8), used by every spec's gate
-(E1.S2). **It is to be built later; nothing runs it yet.** Until it exists, the same list is checked by hand and the
-result recorded with the spec's gate.
+tool of the bench plan's stories for the visible samples and for this document, used by every spec's gate. **It is to be
+built later; nothing runs it yet.** Until it exists, the same list is checked by hand and the result recorded with the spec's
+gate.
 
 1. **The file.** The name matches 1.1; the title's `NN` equals the file's.
 2. **The header.** The five rows of 1.2, in order, each value either its placeholder or its later form; the `Kind` value
@@ -850,7 +850,7 @@ result recorded with the spec's gate.
 7. **No forbidden needle.** No hit, case-insensitive, of any needle of a list the spec author supplies with the check (for
    a known task, its id, title and site names; for every task, anything else the test-design notes say a spec must not
    carry). The list is kept outside git with those notes, since it may name what it guards. Always added to it: the
-   bench plan's identifiers (story, epic, decision, gate and test ids, by pattern), `http://` and `https://`, and the
+   bench plan's identifiers (story, epic, decision, gate and test ids, by pattern), web links (the http and https schemes), and the
    names of the implementation languages, runtimes and web frameworks of the series.
 8. **The `⏎` glyph** occurs only in section 6.
 
@@ -869,7 +869,7 @@ touches every spec that carries it. Each touched spec takes an amendment of its 
 the new version.
 
 **What an amendment costs.** An amendment of this document, like an amendment of a spec, **voids the registered limits of
-every task it touches** (the bench plan's calibration-order check, G-17): those tasks are validated jointly, calibrated
+every task it touches** (the bench plan's calibration-order check): those tasks are validated jointly, calibrated
 and registered again, for both stacks, before the pre-registration. After the pre-registration, neither this document
 nor a spec changes.
 
