@@ -1,6 +1,6 @@
 # Task spec and sample format
 
-Format version: 2.1
+Format version: 2.2
 Gate verdict: not yet gated
 Freeze tag: none yet
 
@@ -13,6 +13,21 @@ Sections 1 to 6 are the format; section 7 is its changelog. **Sections 3 to 5 ar
 `runner/GRAMMAR.md`**, beside the runner that implements them, so they are written to be read on their own. The rules for
 checking a spec against this format and for amending it are kept in a separate maintainers' document that no workspace
 and no run base carries.
+
+**Section classes.** Every section below has one class: `common`, `olympiad`, `daemon` or `web`. A section that serves two
+kinds of task is `common`. After the freeze of the first group of tasks, the `common` and `olympiad` sections do not
+change; a `daemon` or `web` section may change before the freeze of a later group, as a new dated version that names the
+tasks it touches, and such a change touches no olympiad task.
+
+| Section | Class |
+|---|---|
+| 1. The spec file | common |
+| 2. The fixed sentences | common |
+| 3. Visible samples | common |
+| 4. The scenario script (`.in`) | common |
+| 5. The expected transcript (`.out`) | common |
+| 6. Worked examples | common |
+| 7. Changelog | common |
 
 ## 1. The spec file
 
@@ -180,7 +195,7 @@ Standard error is not compared and may hold anything; it is recorded, not judged
 F-MEMORY, memory as the program's own control group counts it:
 
 ```text
-Memory is measured as the peak memory of the program's own control group (cgroup `memory.peak`), which counts the program and every process it starts, including the page cache and kernel memory charged to them, with no swap. A run whose memory reaches the limit is stopped and fails that test. The tests run only on a machine that can read this peak, and no other measurement of memory passes or fails a test.
+Memory is measured as the peak memory of the program's own control group (cgroup `memory.peak`), which counts the program and every process it starts, including the page cache and kernel memory charged to them, with no swap. The program's memory reaches the limit when the system kills a process of the program's control group at the limit, or when the program's own runtime stops it for lack of memory; either way the run is stopped and fails that test. The test machine caps each runtime's own heap at 90 % of the limit, by that runtime's own setting. The tests run only on a machine that can read this peak, and no other measurement of memory passes or fails a test.
 ```
 
 F-FROZEN, the frozen list:
@@ -1071,3 +1086,8 @@ here with the tasks it touches.
 - v2.1 · 2026-10-31 · draft — olympiad sample cells: `|` written `\|`, a backtick inside a two-backtick code span with
   one space inside each end, and the size fallback for what neither form shows (3.4).
 - v2.1 · 2026-10-31 · draft — a fenced code block belongs to the requirement whose span holds it, like a table (1.3).
+- v2.2 · 2026-11-03 · draft — memory: F-MEMORY names the two ways the program's memory reaches the limit (the system kills
+  a process of its control group at the limit, or its own runtime stops it for lack of memory) and says that the test
+  machine caps each runtime's own heap at 90 % of the limit by that runtime's own setting (2.2).
+- v2.2 · 2026-11-03 · draft — every section has one class (`common`, `olympiad`, `daemon` or `web`) in the table at the
+  top; after the first group's freeze the `common` and `olympiad` sections do not change.
