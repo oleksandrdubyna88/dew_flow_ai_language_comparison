@@ -500,7 +500,7 @@ the syntax of Python's `re` module on bytes.)
   quotes is an error.
 - **String expressions.** Wherever the grammar says `<str>`, one or more strings stand separated by spaces and are joined
   into one byte sequence; a string followed directly by `*<count>` is repeated count times (1 ≤ count ≤ 10 000 000):
-  `"$16384\r\n" "v"*16384 "\r\n"`. The **joined bytes** are the result: after joining, repetition and variable
+  `"0512|" "v"*512`. The **joined bytes** are the result: after joining, repetition and variable
   substitution. Every byte count and offset the grammar names (`split`, `bytes`, a length) counts the joined bytes, and an
   escape such as `\r` or `\xHH` is one byte.
 - **Variables.** Inside a string, `${name}` is replaced by the bytes of the variable `name`, which a `file`, a `repeat` or
@@ -645,6 +645,8 @@ comes first. The `within` of the `wait-exit` is the task's grace period G, measu
   lets the later steps read those bytes in order; a `recv` that needs more than the program wrote fails with
   `eof <conn> "…"`. The `wait-exit` then records the exit already made.
 - **An exit before the trigger is early**: the scenario ends with `early-exit <status>`.
+- **Where these stand.** The end trigger and `wait-exit` stand at the top level of the script, never inside a group. A
+  `capture` does not stand inside a `repeat`, because it would be bound every round.
 
 ### 4.5 Keywords
 
@@ -665,6 +667,9 @@ No wait and no buffer is without a ceiling:
 - A connection's bytes received and not yet read by a step are held up to 256 MiB; beyond that the scenario ends with the
   actual entry `overflow <conn>`.
 - A regular-expression capture searches at most the first 16 MiB of a reply.
+- A script expands to at most 1,000,000 steps in all, each `repeat` counted every round; a longer one is a format error.
+- A string expression expands to at most 200 parts, and a longer one is a format error. A JSON value nested deeper than
+  200 levels is `bad-json`. Matching the fields of one entry stops after 500,000 steps, and the entry then does not match.
 
 ## 5. The expected transcript (`.out`)
 
@@ -757,7 +762,7 @@ A normalised field stands, inside an expected string or JSON string, for a value
 | `${:hex}` | `[0-9a-f]+` |
 | `${:uuid}` | 8, 4, 4, 4 and 12 hex digits joined by hyphens, either case |
 | `${:token}` | `[A-Za-z0-9._~-]+` |
-| `${:ts}` | a UTC time `YYYY-MM-DDThh:mm:ss`, optionally `.` and 1 to 9 digits, then `Z` |
+| `${:ts}` | a UTC time `YYYY-MM-DDThh:mm:ss`, optionally `.` and 1 to 9 digits, then `Z`; it must be a real calendar time |
 | `${:ts.<d>}` | a `${:ts}` with exactly d fraction digits, d from 0 to 9 (`${:ts.0}`: none, and no `.`; `${:ts.3}`: milliseconds) |
 | `${:ts~<duration>}`, `${:ts.<d>~<duration>}` | a `${:ts}` (or `${:ts.<d>}`) within that duration of the runner's UTC clock at the moment the entry was recorded |
 | `${:num <decimal> <tolerance>}` | a decimal number (`-?[0-9]+(\.[0-9]+)?`; in JSON, a number) within the tolerance of the decimal, in exact decimal arithmetic |
@@ -778,7 +783,8 @@ order is not defined:
 - **Entries.** `unordered … end` around two or more entries (at most 64): they match the same number of actual entries at
   that position in any order, when some one-to-one assignment matches every pair. Inside such a group only, an entry's
   connection may be `*`, matching any connection — for the replies of concurrent clients when the spec does not say which
-  client gets which reply. Groups do not nest.
+  client gets which reply. Groups do not nest. An `unordered` group holds no
+  `repeat`.
 - **JSON arrays.** In expected JSON, the object `{"$unordered": [ … ]}` stands for an array whose elements match the
   listed ones in any order, under the same one-to-one rule — for a listing whose order the spec leaves undefined. The
   member name `$unordered` is reserved for this.
@@ -824,10 +830,10 @@ mismatch:
 
 ```text
 FAIL s02 — entry 4 of 9 differs
-  step    s02.in:14   recv c1 until "\r\n" count 2
-  expect  s02.out:6   recv c1 "$5\r\nmango\r\n"
-  actual              recv c1 "$5\r\nmelon\r\n"
-  first difference at byte 5
+  step    s02.in:14   recv c1 bytes 10
+  expect  s02.out:6   recv c1 "0005|mango"
+  actual              recv c1 "0005|melon"
+  first difference at byte 6
 ```
 
 For a reply it compares the status, then the headers, then the body, and names the first part that differs (`status`,
@@ -1142,3 +1148,7 @@ here with the tasks it touches.
   label; a wrapped line of 5.3 no longer starts with a tag-like code span.
 - v2 · 2026-11-04 · draft — layout only, no rule changed: 3.4's example of a two-backtick cell is shown in a three-backtick code
   span, so the spans after it pair as written.
+- v2 · 2026-11-04 · draft — the bounds and placement rules the runner holds, now stated: at most 1,000,000 expanded steps, 200
+  parts in a string expression, JSON nested at most 200 levels, 500,000 steps to match one entry's fields (4.6); the end
+  trigger and `wait-exit` at the top level, no `capture` inside a `repeat` (4.4); a `${:ts}` is a real calendar time (5.3); no `repeat` in an `unordered` group (5.4).
+- v2 · 2026-11-04 · draft — the examples of 4.1 and 5.6 use the invented frame of 6.2.
