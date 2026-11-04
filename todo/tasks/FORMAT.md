@@ -1,6 +1,6 @@
 # Task spec and sample format
 
-Format version: 2.2
+Format version: 2
 Gate verdict: not yet gated
 Freeze tag: none yet
 
@@ -14,19 +14,32 @@ Sections 1 to 6 are the format; section 7 is its changelog. **Sections 3 to 5 ar
 checking a spec against this format and for amending it are kept in a separate maintainers' document that no workspace
 and no run base carries.
 
-**Section classes.** Every section below has one class: `common`, `olympiad`, `daemon` or `web`. A section that serves two
-kinds of task is `common`. After the freeze of the first group of tasks, the `common` and `olympiad` sections do not
-change; a `daemon` or `web` section may change before the freeze of a later group, as a new dated version that names the
-tasks it touches, and such a change touches no olympiad task.
+**Section classes.** Every section below has one class, or, where a section mixes kinds of task, every subsection has
+one: `common` (it serves olympiad tasks and another kind, or every kind), `olympiad`, `daemon`, `web`, or `daemon-web` (it
+serves daemon and web tasks and no olympiad task). The lead text of a section, before its first subsection, is `common`. In
+2.1's table, a row whose sentence stands in a `daemon-web` subsection has that subsection's class. After the freeze of the
+first group of tasks, the `common` and `olympiad` parts do not change and keep their numbers; a `daemon`, `web` or
+`daemon-web` part may change before the freeze of a later group, as a new dated version that names the tasks it touches, and
+such a change touches no olympiad task. The changelog only grows.
 
 | Section | Class |
 |---|---|
 | 1. The spec file | common |
-| 2. The fixed sentences | common |
-| 3. Visible samples | common |
-| 4. The scenario script (`.in`) | common |
-| 5. The expected transcript (`.out`) | common |
-| 6. Worked examples | common |
+| 2.1 How they are used | common |
+| 2.2 Every kind | common |
+| 2.3 Olympiad | olympiad |
+| 2.4 Daemon and web | daemon-web |
+| 2.5 The timing contract of daemon and web tasks | daemon-web |
+| 2.6 Olympiad output: the closed list of normalisations | olympiad |
+| 3.1 Files and ids | common |
+| 3.2 Olympiad samples | olympiad |
+| 3.3 Daemon and web samples: the scenario pair | daemon-web |
+| 3.4 Showing samples in the spec | common |
+| 4. The scenario script (`.in`) | daemon-web |
+| 5. The expected transcript (`.out`) | daemon-web |
+| 6.1 Olympiad — one sample of the pilot spec | olympiad |
+| 6.2 Daemon — a toy store over an invented framed protocol | daemon-web |
+| 6.3 Web — two clients racing on one idempotency key | daemon-web |
 | 7. Changelog | common |
 
 ## 1. The spec file
@@ -147,6 +160,7 @@ the same forms without `any of`.
 | F-LIMITS-D | daemon, web | section 4, in an R | none |
 | F-LOAD | daemon, web | section 4, in the same R as F-LIMITS-D | `{size}`, `{duration}` (2.4) |
 | F-MEMORY | all | section 4, in the same R as F-LIMITS-O or F-LIMITS-D | none |
+| F-PROCS | all | section 4, in the same R as F-MEMORY, after it | none |
 | F-DEADLINES | daemon, web | section 4, in an R | none |
 | F-FROZEN | all | section 5, in an R | none |
 | F-BUILD | all | section 5, in an R | none |
@@ -189,13 +203,19 @@ Every input that violates {ref} is answered as {eref} says, and hidden tests che
 F-STDERR:
 
 ```text
-Standard error is not compared and may hold anything; it is recorded, not judged.
+Standard error is not compared and may hold anything; it is recorded, not judged. Only its size is bounded: a run that writes more than 256 MiB to standard error is stopped, and that test fails.
 ```
 
 F-MEMORY, memory as the program's own control group counts it:
 
 ```text
 Memory is measured as the peak memory of the program's own control group (cgroup `memory.peak`), which counts the program and every process it starts, including the page cache and kernel memory charged to them, with no swap. The program's memory reaches the limit when the system kills a process of the program's control group at the limit, or when the program's own runtime stops it for lack of memory; either way the run is stopped and fails that test. The test machine caps each runtime's own heap at 90 % of the limit, by that runtime's own setting. The tests run only on a machine that can read this peak, and no other measurement of memory passes or fails a test.
+```
+
+F-PROCS, the process bound (it follows F-MEMORY in the same requirement):
+
+```text
+The program and every process it starts may hold at most 512 processes and threads together. Beyond that the system refuses to create another, and a run that needs more fails that test.
 ```
 
 F-FROZEN, the frozen list:
@@ -213,7 +233,7 @@ F-BUILD, the build bound:
 F-ENV, the base environment (it follows F-RUN-O or F-RUN-D in the same requirement):
 
 ```text
-Every test gives the program the same base environment, identical for both stacks apart from a few documented runtime settings of each stack: in it `LANG` and `LC_ALL` are `de_DE.UTF-8`, and nothing else selects a locale.
+Every test gives the program the same base environment, identical for both stacks apart from a few documented runtime settings of each stack: in it `LANG` and `LC_ALL` are `de_DE.UTF-8`, nothing else selects a locale, and `TZ` is `UTC`.
 ```
 
 F-OFFLINE:
@@ -235,7 +255,7 @@ The visible samples are a small part of the same suite; a program that passes th
 
 ### 2.3 Olympiad
 
-F-LIMITS-O, the limits as floors and the registration rule (F-MEMORY follows it in the same requirement):
+F-LIMITS-O, the limits as floors and the registration rule (F-MEMORY and F-PROCS follow it in the same requirement):
 
 ```text
 Each test runs the program once, in a fresh process, under a limit on wall-clock time and a limit on memory. The exact values are registered when the hidden suite is calibrated against reference solutions in both stacks, before any session, and are given to the test runner, not to the program's author. The registered values are never below these floors: **1 second** of wall-clock time per run and **256 MB** of memory. (The registration rule: at least three times the wall time of the slower reference, and at least twice the peak memory of the larger reference.)
@@ -331,7 +351,7 @@ have — for example "the `id` member is a UUID; it is compared by its form, and
 order carries the same value". The scenario files express that with the normalised fields of 5.3, and relations between
 such values (pairwise distinct, equal to a count) with the checks of 5.5.
 
-F-LIMITS-D (F-LOAD and F-MEMORY follow it in the same requirement):
+F-LIMITS-D (F-LOAD, F-MEMORY and F-PROCS follow it in the same requirement):
 
 ```text
 Each test starts the program once, in a fresh process, and drives one scenario against it under a bound on the program's memory. The exact bound is registered when the hidden suite is calibrated against reference solutions in both stacks, before any session, and is given to the test runner, not to the program's author. The registered bound is never below a floor of **256 MB**. (The registration rule: at least twice the peak memory of the larger reference over all the task's load scenarios.)
@@ -502,8 +522,10 @@ start ready stdout <str> within <T>
 - `scenario 2` is the first statement: the grammar version. This grammar is version 2; a file of another version is a
   format error, named with its file and line, and nothing is run.
 - `default within <duration>` is the second: the deadline of every waiting step that names none.
-- `env <NAME> <str>` sets one environment variable of the program. `PORT` is reserved: the runner chooses a free port and
-  sets it.
+- `env <NAME> <str>` sets one environment variable of the program: a variable the base environment (F-ENV) does not
+  have, or `TZ`. `PORT` is reserved: the runner chooses a free port and sets it. No other variable of the base
+  environment, in any spelling of its case, and not the per-test setting by which the test machine caps a runtime's heap,
+  may be set: a scenario that sets one is refused and runs nothing.
 - `file <name> <str>` writes the bytes into a new file inside `.scenario/` of the test's copy of the workspace and binds
   the variable `name` to its absolute path, for use in a later `env` (a fixture the program reads). `env` and `file`
   lines may come in any order, each variable bound before its use.
@@ -533,7 +555,7 @@ waiting step, measured from the moment the step starts. The *entry* column names
 |---|---|---|
 | `connect <conn> tcp\|http [rcvbuf <bytes>] [within <d>]` | opens a TCP connection to 127.0.0.1 on `PORT` and names it, retrying a refused attempt every 50 ms until its deadline — its `within`, else the scenario's T (the `within` of `start`); `http` makes it an HTTP/1.1 client connection; `rcvbuf` sets the client's receive buffer (a slow reader's backpressure) | none |
 | `send <conn> <str> [split <o1>[,<o2>…] pause <d>] [within <d>]` | writes the joined bytes in one write; with `split`, writes them in pieces cut at the given offsets into the joined bytes (strictly increasing, each 0 < o < length), sleeping `pause` between pieces; completes when every byte is written | none |
-| `request <conn> <METHOD> <str>` | starts an HTTP request on an `http` connection, the string being the target (it begins with `/`); the `header <str> <str>` lines after it add or replace headers, and at most one `body <str>` or `body json <JSON text>` line gives the body; the request is written when the next other statement is reached | none |
+| `request <conn> <METHOD> <str>` | starts an HTTP request on an `http` connection, the string being the target (it begins with `/`); the `header <str> <str>` lines after it add or replace headers (a header's name is exactly one plain string; its value is any string), and at most one `body <str>` or `body json <JSON text>` line gives the body; the request is written when the next other statement is reached | none |
 | `recv <conn> <mode> [chunk <bytes> pause <d>] [capture …]… [within <d>]` | reads one reply (modes below); with `chunk`, reads at most that many bytes per read and sleeps `pause` between reads | one `recv` or `reply` entry; `lines <k>` adds k entries |
 | `expect <conn> quiet for <d>` | checks that during that time no byte arrives and the program does not close the connection; allowed on `stdout` too | `quiet <conn>` |
 | `expect <conn> closed [within <d>]` | checks that the program closes the connection: end of stream with no byte before it; on `stdout`, the end of standard output | `closed <conn>` |
@@ -635,7 +657,8 @@ No wait and no buffer is without a ceiling:
 - **One test lasts at most 600 seconds** from the start of the program, sleeps included. At that bound the runner stops
   the program and the case fails with `test bound: 600 s reached`.
 - The program's standard output (when no step reads it) and its standard error are kept up to 16 MiB each; what is cut
-  is recorded as cut.
+  is recorded as cut. A program that writes more than 256 MiB to standard error is stopped, and the test fails with
+  `standard error overflow` (F-STDERR).
 - A connection's bytes received and not yet read by a step are held up to 256 MiB; beyond that the scenario ends with the
   actual entry `overflow <conn>`.
 - A regular-expression capture searches at most the first 16 MiB of a reply.
@@ -654,7 +677,7 @@ count times, as in the script.
 | `ready` | `start` | — |
 | `recv <conn> <str>` | `recv` on `tcp` or `stdout` | the reply's bytes, compared as bytes |
 | `recv <conn> json <JSON text>` | `recv` on `tcp` or `stdout` | the reply's bytes, compared as one JSON value (5.2) |
-| `reply <conn> <status>` followed by `header <str> <str>` lines and exactly one `body …` line | `recv` on `http` | the status code, the headers to compare, the body: `body <str>`, `body json <JSON text>` or `body empty` |
+| `reply <conn> <status>` followed by `header <str> <str>` lines and exactly one `body …` line | `recv` on `http` | the status code, the headers to compare (a header's name is exactly one plain string), the body: `body <str>`, `body json <JSON text>` or `body empty` |
 | `quiet <conn>` | `expect … quiet` | — |
 | `closed <conn>` | `expect … closed` | — |
 | `exit <status>` | `wait-exit` | the exit status |
@@ -770,7 +793,9 @@ written after the last entry; a check produces no entry.
   number.
 
 A check names binding fields of the transcript and `capture` variables of the script alike; both are bound once, in one
-namespace. Checks run after every entry has matched, in file order.
+namespace. Checks run after every entry has matched, in file order. A check may not relate a value bound inside an
+`unordered` group or a `$unordered` array to anything outside that group or array: `check distinct` names all of the
+group's bindings or none of them. A check that does is a format error.
 For example, three requests that must each get a fresh token:
 
 ```text
@@ -787,7 +812,8 @@ check distinct t*
 ### 5.6 The verdict and the mismatch report
 
 A scenario passes when every step ran, the two transcripts match (5.2 to 5.4), every check holds (5.5), the program left
-no process running after its exit, and its memory stayed within the registered bound as its control group measured it.
+no process running after its exit, and its memory did not reach the registered bound (F-MEMORY: no process of its
+control group was killed at the bound, and its own runtime did not stop it for lack of memory).
 The first three are this grammar's; the last two are the runner's own lifecycle checks, reported on their own lines.
 
 The runner reports one line per scenario, `PASS <id> — <k> entries`, or `FAIL <id> — <reason>` followed by the first
@@ -801,11 +827,12 @@ FAIL s02 — entry 4 of 9 differs
   first difference at byte 5
 ```
 
-For a reply it names the part (`status`, `header location`, `body`) and, in a JSON body, the path of the first
+For a reply it compares the status, then the headers, then the body, and names the first part that differs (`status`,
+`header location`, `body`) and, in a JSON body, the path of the first
 difference (`body $.qty: expected 2, actual 3`); for a group, the expected entry no assignment could match; for a count,
 `expected 9 entries, actual 6`, with the step that ended the scenario; for a check, `check: t0 and t2 are equal` or
 `check: total is 63, expected 64`; for the lifecycle, `stop: still running 5 s after SIGTERM, killed`,
-`leftover: 1 process still running after the exit`, `memory: peak above the registered bound` or
+`leftover: 1 process still running after the exit`, `memory limit`, `standard error overflow` or
 `test bound: 600 s reached`. Strings longer than 120 bytes are shown as their first 60 and last 40 bytes, with the count
 left out between. The full actual transcript is kept with the test's record.
 
@@ -1000,7 +1027,7 @@ FAIL x3 — entry 3 of 7 differs
   step    x3.in:21   recv b
   expect  x3.out:7   reply b 201
   actual             reply b 201
-  body $.id: expected "${order}" = "0b6f…", actual "5d2a…"
+  header location: expected "/orders/0b6f…", actual "/orders/5d2a…"
 ```
 
 ## 7. Changelog
@@ -1091,3 +1118,20 @@ here with the tasks it touches.
   machine caps each runtime's own heap at 90 % of the limit by that runtime's own setting (2.2).
 - v2.2 · 2026-11-03 · draft — every section has one class (`common`, `olympiad`, `daemon` or `web`) in the table at the
   top; after the first group's freeze the `common` and `olympiad` sections do not change.
+- v2 · 2026-11-04 · draft — the version: the gated text says `Format version: 2`; the draft revisions 2.1 and 2.2 above are
+  part of it.
+- v2 · 2026-11-04 · draft — classes: the five classes `common`, `olympiad`, `daemon`, `web` and `daemon-web`, given per
+  subsection where a section mixes kinds; 2.1's rows follow their sentence's class; the lead text of a section is `common`
+  (the table at the top).
+- v2 · 2026-11-04 · draft — standard error: F-STDERR and 4.6 say that a run writing more than 256 MiB to standard error is
+  stopped and fails (`standard error overflow`); its content is still never compared (2.2, 4.6).
+- v2 · 2026-11-04 · draft — the base environment: F-ENV says `TZ` is `UTC`; 4.2 says which variables an `env` line may set
+  (2.2, 4.2).
+- v2 · 2026-11-04 · draft — processes: the new fixed sentence F-PROCS, at most 512 processes and threads for the program and
+  every process it starts, in the same requirement as F-MEMORY (2.1, 2.2, 2.3, 2.4).
+- v2 · 2026-11-04 · draft — a header's name is exactly one plain string (4.3, 5.1).
+- v2 · 2026-11-04 · draft — a check may not relate a value bound inside an `unordered` group or a `$unordered` array to
+  anything outside it (5.5).
+- v2 · 2026-11-04 · draft — the verdict: memory fails as F-MEMORY's two causes say, reported `memory limit`; a reply is
+  compared status, headers, body, and the first differing part is named; 6.3's stated failure is the `location` header (5.6,
+  6.3).
