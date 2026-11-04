@@ -469,7 +469,7 @@ Section 6 of a spec shows every visible sample, and only those, with the same by
   sample, each cell one code span. Bytes are shown as they are, except that each line feed is shown as `⏎`; a cell may
   show only printable ASCII and the space. A cell is a code span of one backtick when its bytes hold no backtick and do
   not both begin and end with a space; otherwise it is a code span of two backticks with one space added inside each
-  end (`` `` a`b `` ``). In either form a `|` is written `\|`, which the table reads as `|`. A sample that cannot be shown
+  end (``` `` a`b `` ```). In either form a `|` is written `\|`, which the table reads as `|`. A sample that cannot be shown
   these ways (bytes that are only spaces or hold two backticks in a row, another byte, or more than 200 bytes) shows
   `<size> bytes, see samples/<id>.in` (or `.out`) in its cell instead. Prose after the table may explain how a sample is
   built.
@@ -1140,3 +1140,5 @@ here with the tasks it touches.
   6.3).
 - v2 · 2026-11-04 · draft — layout only, no rule changed: F-TIMING's sentence in 2.5 stands outside the list, under its own
   label; a wrapped line of 5.3 no longer starts with a tag-like code span.
+- v2 · 2026-11-04 · draft — layout only, no rule changed: 3.4's example of a two-backtick cell is shown in a three-backtick code
+  span, so the spans after it pair as written.
