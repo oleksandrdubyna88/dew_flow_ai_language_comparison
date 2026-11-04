@@ -358,8 +358,8 @@ Each test starts the program once, in a fresh process, and drives one scenario a
 ```
 
 F-LOAD. `{size}` says in words how large a load scenario gets — counts of connections, requests or bytes, or the R-ids
-of the bounds it reaches (`the bounds of R32 and R33`); `{duration}` is whole seconds, at most 600 (the test bound of
-4.6).
+of the bounds it reaches (`the bounds of R32 and R33`); `{duration}` is whole seconds, and the whole scenario, its start and
+its stop included, stays inside the test bound of 4.6 (600 seconds).
 
 ```text
 The load scenarios are hidden scenarios of up to {size}, each lasting at most {duration} seconds; the bound on memory holds in every test, whether it is a load scenario or not.
@@ -573,7 +573,8 @@ headers — `Host: 127.0.0.1:<PORT>`, and `Content-Length: <n>` when there is a 
 `<name>: <value>`, then an empty line and the body; every line ends with CR LF. It writes no other header: no
 `User-Agent`, no `Accept`, no `Connection` (so the connection is persistent, as HTTP/1.1 makes it by default). A `header`
 line whose name equals a default header's, ASCII letters compared without regard to case, replaces that default at the
-default's position instead of adding a second one. A request that must lack a default header, or break HTTP's syntax, is
+default's position instead of adding a second one. Two `header` lines with one name, when it is not a default's, are
+written as two lines, in order. A request that must lack a default header, or break HTTP's syntax, is
 written as raw bytes with `send` on the same `http` connection. `body json <JSON text>` sends the JSON text's bytes as
 written, after variable substitution, and adds no `content-type`; a spec that requires one lists it with `header`.
 
@@ -604,6 +605,9 @@ the connection; an interim `1xx` response is skipped.
   5.2) and takes the value at the path;
 - `capture <name> regex <str> [as <type>]` — searches the reply's bytes (on `http`: its body) with the regular expression
   and takes group 1, or the whole match when the expression has no group.
+
+On `http` a capture reads the body only; no capture reads a header. A header's value is compared in the transcript, where a
+binding field (5.3) can bind it for the transcript's checks (5.5); a later step of the script cannot use it.
 
 `as <type>` checks the value against a type of 5.3. A capture that finds nothing, or a value of another form, ends the
 scenario with the entry `capture-failed <name>`. A value captured from JSON keeps its JSON type: substituted into a
@@ -1152,3 +1156,6 @@ here with the tasks it touches.
   parts in a string expression, JSON nested at most 200 levels, 500,000 steps to match one entry's fields (4.6); the end
   trigger and `wait-exit` at the top level, no `capture` inside a `repeat` (4.4); a `${:ts}` is a real calendar time (5.3); no `repeat` in an `unordered` group (5.4).
 - v2 · 2026-11-04 · draft — the examples of 4.1 and 5.6 use the invented frame of 6.2.
+- v2 · 2026-11-04 · draft — from the document gate: F-LOAD's `{duration}` leaves room for the start and the stop inside the
+  test bound (2.4); two `header` lines with one name are written as two lines (4.3); a capture on `http` reads the body only,
+  and a header's value is bound in the transcript (4.3).
