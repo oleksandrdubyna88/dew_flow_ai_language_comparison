@@ -1,7 +1,7 @@
 # Task spec and sample format
 
 Format version: 2
-Gate verdict: not yet gated
+Gate verdict: `proceed` · 2026-11-04
 Freeze tag: none yet
 
 This document fixes the shape of every task spec in `todo/tasks/` and of every visible sample beside it: the file and its
@@ -604,12 +604,12 @@ the connection; an interim `1xx` response is skipped.
 
 **Captures** bind a value of the reply just read to a variable for later steps and for the transcript:
 
-- `capture <name> json <path> [as <type>]` — on an `http` reply, parses the body as JSON (numbers as exact decimals,
+- `capture <name> json <path> [as <type>]` — only on an `http` reply (elsewhere it is a format error), parses the body as JSON (numbers as exact decimals,
   5.2) and takes the value at the path;
 - `capture <name> regex <str> [as <type>]` — searches the reply's bytes (on `http`: its body) with the regular expression
   and takes group 1, or the whole match when the expression has no group.
 
-On `http` a capture reads the body only; no capture reads a header. A header's value is compared in the transcript, where a
+A capture reads the whole reply just read: with `lines <k>`, all k lines together. On `http` a capture reads the body only; no capture reads a header. A header's value is compared in the transcript, where a
 binding field (5.3) can bind it for the transcript's checks (5.5); a later step of the script cannot use it.
 
 `as <type>` checks the value against a type of 5.3. A capture that finds nothing, or a value of another form, ends the
@@ -673,11 +673,11 @@ No wait and no buffer is without a ceiling:
   is recorded as cut. A program that writes more than 256 MiB to standard error is stopped, and the test fails with
   `standard error overflow` (F-STDERR).
 - A connection's bytes received and not yet read by a step are held up to 256 MiB; beyond that the scenario ends with the
-  actual entry `overflow <conn>`.
+  actual entry `overflow <conn>`. Standard output counts as such a connection when a step reads it (`overflow stdout`).
 - A regular-expression capture searches at most the first 16 MiB of a reply.
 - A script expands to at most 1,000,000 steps in all, each `repeat` counted every round; a longer one is a format error.
 - A string expression expands to at most 200 parts, and a longer one is a format error. A JSON value nested deeper than
-  200 levels is `bad-json`. Matching the fields of one entry stops after 500,000 steps, and the entry then does not match (`the match was abandoned as
+  200 levels is read as invalid JSON: the entry does not match, and the report says `bad-json`. Matching the fields of one entry stops after 500,000 steps, and the entry then does not match (`the match was abandoned as
   too complex`). One step is one try to match the rest of the entry from one position; a position that failed is remembered and
   not tried again.
 
@@ -1169,3 +1169,7 @@ here with the tasks it touches.
 - v2 · 2026-11-04 · draft — from the consultant's reading, seven rules made single-valued: the order of the normalisations and
   what a decimal token is (2.6); `until` occurrences do not overlap, and `quiet` counts an unread byte (4.3); G is kept on the
   runner's own clock (4.4); what a matching step is (4.6); a decimal matches a byte value written as a decimal (5.5).
+- v2 · 2026-11-04 · draft — from the final document round: standard output read by a step has the same 256 MiB bound and an
+  `overflow stdout` entry; too deep a JSON value does not match and the report says `bad-json` (4.6); a JSON capture is only on
+  `http`, and a capture reads the whole reply just read (4.3).
+- v2 · 2026-11-04 · gated — the document gate's two rounds (`proceed`, all findings applied) and one consultant reading.
