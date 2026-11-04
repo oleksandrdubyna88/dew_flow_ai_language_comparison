@@ -387,14 +387,17 @@ The same {k} scenarios are in `samples/`, one scenario file and one expected-tra
 
 - **T**, the readiness deadline, and **G**, the grace period after SIGTERM, have series defaults: **T = 10 seconds** and
   **G = 5 seconds**. A spec states its own T in F-READY and its own G in F-STOP, always, also when they are the defaults.
-- A task that needs another value states it there and adds F-TIMING, once per overridden value, in the same requirement:
+- A task that needs another value states it there and adds F-TIMING, once per overridden value, in the same requirement.
 
-  ```text
-  The series default for {what} is {D} seconds; this task uses {V} seconds because {reason}.
-  ```
+F-TIMING:
 
-  `{what}` is `readiness` or `the grace period`; `{D}` is `10` or `5`; `{V}` is the task's value; `{reason}` is a clause
-  that names the task's own cause, never a stack.
+```text
+The series default for {what} is {D} seconds; this task uses {V} seconds because {reason}.
+```
+
+`{what}` is `readiness` or `the grace period`; `{D}` is `10` or `5`; `{V}` is the task's value; `{reason}` is a clause
+that names the task's own cause, never a stack.
+
 - **Where the runner reads them.** Every scenario of the task, visible or hidden, writes T as the `within` of its `start`
   and G as the `within` of the first `wait-exit` after its end trigger — `signal TERM`, or `close stdin` in a task that
   carries F-EOF (4.4); that deadline is measured from the trigger, not from the start of the `wait-exit` step. The runner
@@ -764,8 +767,8 @@ binds the value it matched to `name` for the checks of 5.5. Inside a `repeat` th
 each round binds its own name. A binding name is bound once, like a script variable, and never clashes with one.
 
 Except in JSON, a field matches the shortest run of bytes that lets the rest of the entry match; the entry's own length
-is fixed by the script's `recv` mode, so a field never decides how much is read. The same types serve `capture … as
-<type>` (without the window, the tolerance and the binding).
+is fixed by the script's `recv` mode, so a field never decides how much is read. The same types serve
+`capture … as <type>` (without the window, the tolerance and the binding).
 
 ### 5.4 Order-insensitive sets
 
@@ -1135,3 +1138,5 @@ here with the tasks it touches.
 - v2 · 2026-11-04 · draft — the verdict: memory fails as F-MEMORY's two causes say, reported `memory limit`; a reply is
   compared status, headers, body, and the first differing part is named; 6.3's stated failure is the `location` header (5.6,
   6.3).
+- v2 · 2026-11-04 · draft — layout only, no rule changed: F-TIMING's sentence in 2.5 stands outside the list, under its own
+  label; a wrapped line of 5.3 no longer starts with a tag-like code span.
