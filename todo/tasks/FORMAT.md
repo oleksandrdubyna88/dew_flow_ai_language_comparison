@@ -423,6 +423,9 @@ naming one or more items of this closed list, joined by `; ` in the order of the
 The output is compared with the expected output byte for byte, except that {normalisations}. Nothing else is normalized.
 ```
 
+The runner applies the named items to both outputs in the order of the list. In the numeric tolerance, a decimal number is an
+optional `-`, digits, and optionally `.` and digits; a token with an exponent is not one.
+
 No other normalisation exists. The test runner takes the task's normalisation from its registered entry, which is
 copied from this sentence; the sample files stay exact bytes either way.
 
@@ -560,7 +563,7 @@ waiting step, measured from the moment the step starts. The *entry* column names
 | `send <conn> <str> [split <o1>[,<o2>…] pause <d>] [within <d>]` | writes the joined bytes in one write; with `split`, writes them in pieces cut at the given offsets into the joined bytes (strictly increasing, each 0 < o < length), sleeping `pause` between pieces; completes when every byte is written | none |
 | `request <conn> <METHOD> <str>` | starts an HTTP request on an `http` connection, the string being the target (it begins with `/`); the `header <str> <str>` lines after it add or replace headers (a header's name is exactly one plain string; its value is any string), and at most one `body <str>` or `body json <JSON text>` line gives the body; the request is written when the next other statement is reached | none |
 | `recv <conn> <mode> [chunk <bytes> pause <d>] [capture …]… [within <d>]` | reads one reply (modes below); with `chunk`, reads at most that many bytes per read and sleeps `pause` between reads | one `recv` or `reply` entry; `lines <k>` adds k entries |
-| `expect <conn> quiet for <d>` | checks that during that time no byte arrives and the program does not close the connection; allowed on `stdout` too | `quiet <conn>` |
+| `expect <conn> quiet for <d>` | checks that during that time there is no unread byte on the connection (one that waits from earlier counts, as well as one that arrives) and the program does not close the connection; allowed on `stdout` too | `quiet <conn>` |
 | `expect <conn> closed [within <d>]` | checks that the program closes the connection: end of stream with no byte before it; on `stdout`, the end of standard output | `closed <conn>` |
 | `close <conn>` | closes the connection; `close stdin` ends the program's standard input | none |
 | `shutdown <conn>` | closes the sending half of a TCP connection; reading goes on | none |
@@ -589,7 +592,7 @@ program closes the connection.
 | Mode | The reply is |
 |---|---|
 | `bytes <n>` | exactly the next n bytes |
-| `until <str> [count <k>]` | every byte up to and including the k-th next occurrence of the delimiter (k = 1 by default) |
+| `until <str> [count <k>]` | every byte up to and including the k-th next occurrence of the delimiter (k = 1 by default); occurrences do not overlap, so the count goes on after the end of the one before |
 | `lines <k>` | the next k lines, each ending with a line feed; each line, its line feed included, is its own entry |
 | `eof` | every byte up to the end of the stream |
 
@@ -640,7 +643,8 @@ end
 
 **The end.** A scenario has exactly one `wait-exit`, always with its `within`. Before it stands the scenario's **end
 trigger**: `signal TERM`, or `close stdin` for a program that ends at the end of its input (F-EOF) — whichever of the two
-comes first. The `within` of the `wait-exit` is the task's grace period G, measured from the trigger.
+comes first. The `within` of the `wait-exit` is the task's grace period G, measured from the trigger. The runner keeps this deadline on its
+own clock: at the trigger plus G it kills the program, whichever step is running then.
 
 - **Between the trigger and `wait-exit`**, and after `wait-exit`, only `recv`, `expect`, `sleep` and `close` may stand:
   the steps that read what the program wrote (on `stdout` above all: the lines it writes when it stops) or wait. Nothing
@@ -673,7 +677,9 @@ No wait and no buffer is without a ceiling:
 - A regular-expression capture searches at most the first 16 MiB of a reply.
 - A script expands to at most 1,000,000 steps in all, each `repeat` counted every round; a longer one is a format error.
 - A string expression expands to at most 200 parts, and a longer one is a format error. A JSON value nested deeper than
-  200 levels is `bad-json`. Matching the fields of one entry stops after 500,000 steps, and the entry then does not match.
+  200 levels is `bad-json`. Matching the fields of one entry stops after 500,000 steps, and the entry then does not match (`the match was abandoned as
+  too complex`). One step is one try to match the rest of the entry from one position; a position that failed is remembered and
+  not tried again.
 
 ## 5. The expected transcript (`.out`)
 
@@ -803,7 +809,8 @@ written after the last entry; a check produces no entry.
   end in `*` to stand for every binding and capture name with that prefix (`r*`).
 - `check equal <name> <decimal | name | str>` — the value equals the decimal (in exact decimal arithmetic), the other
   value, or the string: a string matches a byte value with those bytes or a JSON string with those characters, never a
-  number.
+  number. A decimal matches a JSON number, or a byte value written as a decimal (an optional `-`, digits, and
+  optionally `.` and digits); never a JSON string.
 
 A check names binding fields of the transcript and `capture` variables of the script alike; both are bound once, in one
 namespace. Checks run after every entry has matched, in file order. A check may not relate a value bound inside an
@@ -1159,3 +1166,6 @@ here with the tasks it touches.
 - v2 · 2026-11-04 · draft — from the document gate: F-LOAD's `{duration}` leaves room for the start and the stop inside the
   test bound (2.4); two `header` lines with one name are written as two lines (4.3); a capture on `http` reads the body only,
   and a header's value is bound in the transcript (4.3).
+- v2 · 2026-11-04 · draft — from the consultant's reading, seven rules made single-valued: the order of the normalisations and
+  what a decimal token is (2.6); `until` occurrences do not overlap, and `quiet` counts an unread byte (4.3); G is kept on the
+  runner's own clock (4.4); what a matching step is (4.6); a decimal matches a byte value written as a decimal (5.5).
