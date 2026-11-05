@@ -61,7 +61,7 @@ Directly under the title, a two-column table with an empty header row and exactl
 | `Kind` | the kind phrase of the task (below) | unchanged |
 | `Gate verdict` | `not yet gated` | `` `<verdict>` · <YYYY-MM-DD> ``, the verdict being `proceed`, `good_enough` or `continue_anyway` |
 | `Freeze tag` | `none yet` | `` `spec-frozen-<group>-<yyyymmdd>` ``, `<group>` being `A` or `B`, the group of tasks frozen together |
-| `Freeze rule` | `frozen: changes only by a dated amendment` | unchanged |
+| `Freeze rule` | `this text changes only by a dated amendment from its authors` | unchanged |
 | `Amendments` | `none yet` | `A1 (section 8)`, or `A1–A<k> (section 8)` once there are k |
 
 The kind phrases form a closed list; the phrase is the whole value of the `Kind` row:
@@ -221,7 +221,7 @@ The program and every process it starts may hold at most 512 processes and threa
 F-FROZEN, the frozen list:
 
 ```text
-The workspace holds `STATEMENT.md`, `samples/`, `runner/`, `build.sh`, `run.sh`, `PACKAGES.md` and the toolchain pin files of the stack. These are frozen inputs: do not change, rename or remove them. The program's sources go where `build.sh` and `run.sh` expect them; the two scripts say where.
+The workspace holds `STATEMENT.md`, `samples/`, `runner/`, `build.sh`, `run.sh`, `PACKAGES.md` and the toolchain pin files named in `build.sh`. These are frozen inputs: do not change, rename or remove them. The program's sources go where `build.sh` and `run.sh` expect them; the two scripts say where.
 ```
 
 F-BUILD, the build bound:
@@ -239,7 +239,7 @@ Every test gives the program the same base environment, identical for both stack
 F-OFFLINE:
 
 ```text
-The tests run offline. They use a pristine copy of the workspace as you left it: build output and installed packages are removed, and the frozen inputs are put back as they were given; the comment in `build.sh` names the toolchain pin files among them. Every other file, including the files that list your packages, is built as you left it, by `bash build.sh`. The program must not depend on the network, on files outside the workspace, or on anything written during an earlier run.
+The tests run offline. They use a clean copy of the workspace as you left it: build output and installed packages are removed, and the frozen inputs are put back as they were given. Every other file is yours, including the files that list or lock your packages, and is built as you left it, by `bash build.sh`. The program must not depend on the network, on files outside the workspace, or on anything written during an earlier run.
 ```
 
 F-HIDDEN — the first sentence opens the requirement, the task's own sentences about what the hidden tests cover stand
@@ -1173,7 +1173,8 @@ here with the tasks it touches.
   `overflow stdout` entry; too deep a JSON value does not match and the report says `bad-json` (4.6); a JSON capture is only on
   `http`, and a capture reads the whole reply just read (4.3).
 - v2 · 2026-11-04 · gated — the document gate's two rounds (`proceed`, all findings applied) and one consultant reading.
-- v2 · 2026-11-05 · amendment before any spec's gate, `Format version: 2` kept — F-OFFLINE says what is scored: the workspace as left, with build output and installed packages removed and the frozen inputs put back, and every other file, including the files that list the packages, built as left.
+- v2 · 2026-11-05 · amendment before any spec's gate, `Format version: 2` kept — F-OFFLINE says what is scored: the workspace as left, with build output and installed packages removed and the frozen inputs put back, and every other file, including the files that list or lock the packages, built as left.
 - v2 · 2026-11-05 · amendment — the `Freeze tag` value names the group of tasks frozen together, `spec-frozen-<group>-<yyyymmdd>` (1.2).
-- v2 · 2026-11-05 · amendment — the `Freeze rule` row is `frozen: changes only by a dated amendment` (1.2).
+- v2 · 2026-11-05 · amendment — the `Freeze rule` row is `this text changes only by a dated amendment from its authors` (1.2).
+- v2 · 2026-11-05 · amendment — F-FROZEN names the toolchain pin files by `build.sh`, so a file that lists or locks the packages is not read as one.
 - v2 · 2026-11-05 · amendment — the memory floors of F-LIMITS-O and F-LIMITS-D are written `256 MiB`, the unit the rest of this document uses.
