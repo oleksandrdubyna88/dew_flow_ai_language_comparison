@@ -239,7 +239,7 @@ Every test gives the program the same base environment, identical for both stack
 F-OFFLINE:
 
 ```text
-The tests run offline. They use a pristine copy of the workspace as you left it: build output and installed packages are removed, and the frozen inputs are put back as they were given. Your other files, the project files included, are built as you left them, by `bash build.sh`. The program must not depend on the network, on files outside the workspace, or on anything written during an earlier run.
+The tests run offline. They use a pristine copy of the workspace as you left it: build output and installed packages are removed, and the frozen inputs are put back as they were given; the comment in `build.sh` names the toolchain pin files among them. Every other file, including the files that list your packages, is built as you left it, by `bash build.sh`. The program must not depend on the network, on files outside the workspace, or on anything written during an earlier run.
 ```
 
 F-HIDDEN — the first sentence opens the requirement, the task's own sentences about what the hidden tests cover stand
@@ -1173,7 +1173,7 @@ here with the tasks it touches.
   `overflow stdout` entry; too deep a JSON value does not match and the report says `bad-json` (4.6); a JSON capture is only on
   `http`, and a capture reads the whole reply just read (4.3).
 - v2 · 2026-11-04 · gated — the document gate's two rounds (`proceed`, all findings applied) and one consultant reading.
-- v2 · 2026-11-05 · amendment before any spec's gate, `Format version: 2` kept — F-OFFLINE says what is scored: the workspace as left, with build output and installed packages removed and the frozen inputs put back, and the project files built as left.
+- v2 · 2026-11-05 · amendment before any spec's gate, `Format version: 2` kept — F-OFFLINE says what is scored: the workspace as left, with build output and installed packages removed and the frozen inputs put back, and every other file, including the files that list the packages, built as left.
 - v2 · 2026-11-05 · amendment — the `Freeze tag` value names the group of tasks frozen together, `spec-frozen-<group>-<yyyymmdd>` (1.2).
 - v2 · 2026-11-05 · amendment — the `Freeze rule` row is `frozen: changes only by a dated amendment` (1.2).
 - v2 · 2026-11-05 · amendment — the memory floors of F-LIMITS-O and F-LIMITS-D are written `256 MiB`, the unit the rest of this document uses.
