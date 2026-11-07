@@ -354,7 +354,7 @@ such values (pairwise distinct, equal to a count) with the checks of 5.5.
 F-LIMITS-D (F-LOAD, F-MEMORY and F-PROCS follow it in the same requirement):
 
 ```text
-Each test starts the program once, in a fresh process, and drives one scenario against it under a bound on the program's memory. The exact bound is registered when the hidden suite is calibrated against reference solutions in both stacks, before any session, and is given to the test runner, not to the program's author. The registered bound is never below a floor of **256 MiB**. (The registration rule: at least twice the peak memory of the larger reference over all the task's load scenarios.)
+Each test starts the program once, in a fresh process, and drives one scenario against it under a bound on the program's memory. The bound is the one the statement states, the same for every task, registered before the freeze and enforced as F-MEMORY says.
 ```
 
 F-LOAD. `{size}` says in words how large a load scenario gets — counts of connections, requests or bytes, or the R-ids
@@ -1179,3 +1179,4 @@ here with the tasks it touches.
 - v2 · 2026-11-05 · amendment — F-FROZEN names the toolchain pin files by `build.sh`, so a project file that declares or locks the packages is not read as one.
 - v2 · 2026-11-05 · amendment — the memory floors of F-LIMITS-O and F-LIMITS-D are written `256 MiB`, the unit the rest of this document uses.
 - v2 · 2026-11-05 · gated — the amendment's document gate: three rounds, `proceed`, each with the gate's second vendor out of quota, so its reading came from the consultants; all findings applied.
+- v2 · 2026-11-07 · amendment before any spec's gate, `Format version: 2` kept — F-LIMITS-D says the memory bound is the one the statement states, the same for every task, registered before the freeze and enforced as F-MEMORY says (it was given to the test runner and not to the program's author).
