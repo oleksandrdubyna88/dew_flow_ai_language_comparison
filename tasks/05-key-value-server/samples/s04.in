@@ -1,0 +1,25 @@
+scenario 2
+# Two clients share one store. c1 sends two requests in one write and gets
+# two replies in order; c2 reads what c1 stored and overwrites it; c1 reads
+# the new value. DEL of one present key answers 1.
+default within 2s
+start ready port within 10s
+connect c1 tcp
+connect c2 tcp
+send c1 "*3\r\n$3\r\nSET\r\n$4\r\nteam\r\n$5\r\nalpha\r\n*2\r\n$3\r\nGET\r\n$4\r\nteam\r\n"
+recv c1 until "\r\n"
+recv c1 until "\r\n" count 2
+send c2 "*2\r\n$3\r\nGET\r\n$4\r\nteam\r\n"
+recv c2 until "\r\n" count 2
+send c2 "*3\r\n$3\r\nSET\r\n$4\r\nteam\r\n$4\r\nbeta\r\n"
+recv c2 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$4\r\nteam\r\n"
+recv c1 until "\r\n" count 2
+send c2 "*2\r\n$3\r\nDEL\r\n$4\r\nteam\r\n"
+recv c2 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$4\r\nteam\r\n"
+recv c1 until "\r\n"
+close c1
+close c2
+signal TERM
+wait-exit within 5s

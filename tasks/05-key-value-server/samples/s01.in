@@ -1,0 +1,21 @@
+scenario 2
+# One client: PING, SET, GET, a key that was never set, DEL of two names of
+# which one is present, GET after the deletion.
+default within 2s
+start ready port within 10s
+connect c1 tcp
+send c1 "*1\r\n$4\r\nPING\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$3\r\nSET\r\n$5\r\ncolor\r\n$4\r\nblue\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\ncolor\r\n"
+recv c1 until "\r\n" count 2
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\nshape\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$3\r\nDEL\r\n$5\r\ncolor\r\n$5\r\nshape\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\ncolor\r\n"
+recv c1 until "\r\n"
+close c1
+signal TERM
+wait-exit within 5s

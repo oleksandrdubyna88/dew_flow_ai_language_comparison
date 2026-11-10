@@ -1,0 +1,26 @@
+scenario 2
+# Counters: INCR on a key that was never set, then again; the stored text;
+# INCR on a negative value; INCR on a value that is not an integer, which
+# leaves the value unchanged.
+default within 2s
+start ready port within 10s
+connect c1 tcp
+send c1 "*2\r\n$4\r\nINCR\r\n$4\r\nhits\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$4\r\nINCR\r\n$4\r\nhits\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$4\r\nhits\r\n"
+recv c1 until "\r\n" count 2
+send c1 "*3\r\n$3\r\nSET\r\n$4\r\ntemp\r\n$2\r\n-3\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$4\r\nINCR\r\n$4\r\ntemp\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$3\r\nSET\r\n$4\r\nword\r\n$3\r\nten\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$4\r\nINCR\r\n$4\r\nword\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$4\r\nword\r\n"
+recv c1 until "\r\n" count 2
+close c1
+signal TERM
+wait-exit within 5s
