@@ -17,7 +17,7 @@ is tested.
 value, and may carry an expiry instant after which the entry no longer exists. Keys and values are sequences of bytes.
 A client connects, sends requests in the frame format of section 3, and receives exactly one reply per request, on the
 same connection, in the order the requests were received. Many clients are connected at once, and the program serves
-each of them at the same time as the others.
+all of them; no client waits until another one disconnects.
 
 **R2.** The store is empty when the program starts and lives only in the program's memory: nothing is read from or
 written to disk, and nothing survives a stop.
@@ -34,7 +34,8 @@ readiness; a program that is not ready by then fails that test.
 **R5.** The program keeps serving whatever any one client does. A client may connect and disconnect without sending a
 byte (the readiness probe does exactly that), may disconnect in the middle of a request, or may disconnect while
 replies to it are still unsent; in each case the program drops that connection, an incomplete frame of that connection
-changes nothing, every other connection continues, and the program does not exit.
+changes nothing, every other connection continues, and the program does not exit. Complete frames that the client sent
+before it closed the connection may or may not be processed; no test depends on which.
 
 **R6.** A test ends by sending the signal SIGTERM to the program. The program must then exit with status 0 within 5
 seconds, leaving no process it started still running. A program still running after 5 seconds is killed and fails that
@@ -147,13 +148,12 @@ a fresh entry — whether or not any command named the key since the instant pas
 and every command sees it.
 
 **R23.** The tests keep a margin around every expiry instant: no test sends a command on a key in the 500 milliseconds
-before or the 500 milliseconds after that key's expiry instant, counted from the moment the test sent the command that
-set the instant. So a clock that is accurate to a tenth of a second is enough.
+before or the 500 milliseconds after any expiry instant that the test gave that key, also one that a later command
+removed or replaced. So a clock that is accurate to a tenth of a second is enough.
 
 **R24.** The memory an expired entry occupied is released without any later command naming it: an entry whose expiry
-instant passed more than 10 seconds ago is removed from the store, and the program keeps no reference to it. The memory
-the program needs depends only on the entries that exist or expired less than 10 seconds ago (R33), not on everything
-stored over the test's whole run.
+instant passed more than 10 seconds ago is removed from the store. The memory the store needs depends only on the
+entries that exist or expired less than 10 seconds ago (R33), not on everything stored over the test's whole run.
 
 ### 3.4 Many clients
 
@@ -161,14 +161,15 @@ stored over the test's whole run.
 interleave, and the commands from all connections are processed in some single order that respects each connection's
 own order. Hence a command sent on any connection after the reply to a `SET`, `DEL`, `INCR`, `EXPIRE` or `PEXPIRE` was
 received sees that command's effect, and k `INCR` commands on one key, from any number of connections, raise its number
-by exactly k. Each reply is one of the k consecutive values that follow the number the key held before the first of
-these commands, and the replies on one connection increase.
+by exactly k. Each reply is one of the k consecutive values that follow the number the key held (0 if it had no
+entry) before the first of these commands, and the replies on one connection increase.
 
 **R26.** A client that sends requests and does not read its replies for a while, or reads them slowly, does not slow
 or stop the service of the other connections: their replies keep coming within the deadlines. The slow client's replies
 are neither lost nor reordered; they are delivered, complete and in order, as it reads. While replies to a client are
-unread, the program may stop reading that client's requests until the client reads its replies; no test writes more
-than 64 KiB of requests to a connection while earlier replies on it are unread.
+unread, the program may stop reading that client's requests until the client reads its replies. At any moment, the
+requests that a test has written to one connection after the request of the oldest reply it has not yet read total at
+most 64 KiB; a single larger request comes only when every earlier reply on that connection has been read.
 
 **R27.** When a client closes the sending half of its connection after writing one or more complete frames, the program
 still answers every one of those frames, in order, and only then may close the connection. When a client closes the
@@ -180,8 +181,8 @@ connection entirely, R5 applies.
 hidden test. What the program does with it is unspecified and is never tested. Such input is: a byte sequence that is
 not an array frame of bulk strings; a command name not in section 3.2; a command with another number of elements than
 its row states; a `SET` of five elements whose fourth element is not `EX` or `PX`; a lifetime that is not a positive
-integer written in decimal; a key, value, key count, connection count, entry count or stored size outside the limits
-of section 4.
+integer written in decimal; a key, value, lifetime, key count, connection count, entry count or stored size outside
+the limits of section 4.
 
 **R29.** Standard output is compared only where a requirement of this spec says what it holds; otherwise it is recorded,
 not judged. No requirement of this spec says what standard output holds.
@@ -201,8 +202,8 @@ once, and at most 10 000 connections are opened over one test; a test lasts at m
 
 **R33.** In every test, at every instant, the entries that exist or whose expiry instant passed less than 10 seconds
 ago number at most 200 000 and hold at most 64 MiB (67 108 864 bytes) of keys and values together. Over a whole test,
-at most 1 GiB (1 073 741 824 bytes) of keys and values is stored in all, counting every `SET`; all of it beyond the
-entries above belongs to entries that expired, were deleted or were replaced.
+at most 1 GiB (1 073 741 824 bytes) of keys and values is stored in all, counting every `SET` and `INCR`; all of it
+beyond the entries above belongs to entries that expired, were deleted or were replaced.
 
 **R34.** Each test starts the program once, in a fresh process, and drives one scenario against it under a bound on the
 program's memory. The bound is the one the task's statement states: one registered value, the same for every daemon and
