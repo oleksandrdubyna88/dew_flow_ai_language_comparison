@@ -210,7 +210,7 @@ program's memory. The bound is the one the task's statement states: one register
 web task, which the test harness adds to the statement from its registration, so a spec never writes the number. It is
 registered before the freeze, only once the reference solutions of every daemon and web task pass every test under it in
 both stacks, and enforced as F-MEMORY says. The load scenarios are hidden scenarios of up to the bounds of R32 and R33,
-each lasting at most 600 seconds; the bound on memory holds in every test, whether it is a load scenario or not. Memory
+each lasting at most 540 seconds; the bound on memory holds in every test, whether it is a load scenario or not. Memory
 is measured as the peak memory of the program's own control group (cgroup `memory.peak`), which counts the program and
 every process it starts, including the page cache and kernel memory charged to them, with no swap. The program's memory
 reaches the limit when the system kills a process of the program's control group at the limit, or when the program's own
