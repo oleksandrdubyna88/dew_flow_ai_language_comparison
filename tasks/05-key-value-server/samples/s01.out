@@ -1,0 +1,9 @@
+transcript 2
+ready
+recv c1 "+PONG\r\n"
+recv c1 "+OK\r\n"
+recv c1 "$4\r\nblue\r\n"
+recv c1 "$-1\r\n"
+recv c1 ":1\r\n"
+recv c1 "$-1\r\n"
+exit 0
