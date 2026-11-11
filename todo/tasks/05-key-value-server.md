@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running program that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `proceed` · 2026-11-11 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
@@ -162,7 +162,11 @@ interleave, and the commands from all connections are processed in some single o
 own order. Hence a command sent on any connection after the reply to a `SET`, `DEL`, `INCR`, `EXPIRE` or `PEXPIRE` was
 received sees that command's effect, and k `INCR` commands on one key, from any number of connections, raise its number
 by exactly k. Each reply is one of the k consecutive values that follow the number the key held (0 if it had no
-entry) before the first of these commands, and the replies on one connection increase.
+entry) before the first of these commands, and the replies on one connection increase. When several connections send
+`INCR` commands on one key at the same time, the order in which they are processed is the program's choice, so the
+number in each of those replies is compared by its form and by these relations, not as fixed bytes: the reply is in
+the integer form of R10, the numbers of these replies differ from one another, and the number the key holds after them
+is the one these relations give.
 
 **R26.** A client that sends requests and does not read its replies for a while, or reads them slowly, does not slow
 or stop the service of the other connections: their replies keep coming within the deadlines. The slow client's replies
@@ -191,8 +195,8 @@ not judged. No requirement of this spec says what standard output holds.
 run that writes more than 256 MiB to standard error is stopped, and that test fails.
 
 **R31.** Every reply is compared with the expected reply byte for byte, except a field that a requirement of this spec
-says is compared otherwise. Nothing else is normalized. No requirement of this spec names another comparison, so every
-reply is compared byte for byte.
+says is compared otherwise. Nothing else is normalized. Only R25 names another comparison, for the replies to `INCR`
+commands that several connections send on one key at the same time; every other reply is compared byte for byte.
 
 ## 4. Limits
 
