@@ -165,9 +165,9 @@ rate and in pieces of any size; a test lasts at most 600 seconds. A live key has
 follows from R10 to R12), so the state the program must hold at any moment is bounded by the live keys, not by the
 events or the keys it has read.
 
-**R23.** A window that has closed and a key that has expired occupy no memory of the program: the bound of R24 on the
-program's memory is set from the live keys and their existing windows (R22), not from everything the program has ever
-read, and a test may feed the program far more keys over its run than the bound would hold at once.
+**R23.** A window that has closed and a key that has expired occupy no memory of the program: the memory the program
+needs depends only on the live keys and their existing windows (R22), not on everything the program has ever read, and
+a test may feed the program far more keys over its run than the bound of R24 on the program's memory would hold at once.
 
 **R24.** Each test starts the program once, in a fresh process, and drives one scenario against it under a bound on the
 program's memory. The bound is the one the task's statement states: one registered value, the same for every daemon and
