@@ -90,12 +90,13 @@ enters no window, changes nothing, and the program writes a late line (R16) for 
 is live from then on (R13). An event whose `ts` equals the watermark is accepted; an event's `ts` equal to M does not
 raise M.
 
-**R12.** When an accepted event raises M, the watermark advances to the new M − L, and every existing window of every key
-whose end a + W is at or below the new watermark **closes**: the program writes its window line (R16) and the window
+**R12.** When an accepted event raises M, it first enters its two windows (R11); then the watermark advances to the new
+M − L, and every existing window of every key whose end a + W is at or below the new watermark **closes**: the program writes its window line (R16) and the window
 exists no more. The window lines of one advance are written in the order of the window start, smaller first, and
 among windows with the same start in the order of their keys (R14). No window closes except by an advance of the
 watermark or by the flush (R15). Hence an accepted event never belongs to a closed window, and an event that would
-belong to a closed window is always late.
+belong to a closed window is always late. Since a window the event entered ends after its `ts`, the advance it causes
+never closes that window, and so never expires the event's own key.
 
 **R13.** A key is **live** from the acceptance of its first event until the moment it has no existing window left. At
 that moment the key **expires**: the program writes its expired line (R16) and keeps nothing about the key. The expired
@@ -161,8 +162,9 @@ requirement names another comparison, so every line is compared byte for byte, i
 
 **R22.** In every test: at most 10 000 000 events are written to standard input; at most 4 000 000 distinct keys occur
 over the test; at every moment at most 100 000 keys are live (R13); a line is at most 256 bytes; input may arrive at any
-rate and in pieces of any size; a test lasts at most 600 seconds. A live key has at most three existing windows (this
-follows from R10 to R12), so the state the program must hold at any moment is bounded by the live keys, not by the
+rate and in pieces of any size; a test lasts at most 600 seconds. Once a line has been processed, a live key has at most
+three existing windows (this follows from R10 to R12; while an event enters its two windows, before the advance it causes,
+its key may hold five), so the state the program must hold at any moment is bounded by the live keys, not by the
 events or the keys it has read.
 
 **R23.** A window that has closed and a key that has expired occupy no memory of the program: the memory the program
