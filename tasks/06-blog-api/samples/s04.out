@@ -1,0 +1,33 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"ann","email":"ann@example.org","bio":null,"image":null,"token":"${a}"}}
+reply c 422
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["username is taken"]}}
+reply c 422
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["email or password is invalid"]}}
+reply c 401
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["unauthorized"]}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"ann","email":"ann@example.org","bio":null,"image":null,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbm4iLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.tuM7HFn6-cRH5grJaE6iX4jGj9dLcEzcOMIqoALVUNA"}}
+reply c 401
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["unauthorized"]}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"article":{"slug":"hi-there","title":"Hi there","description":"Short","body":"Text.","tagList":[],"createdAt":"${:ts~10s}","updatedAt":"${:ts~10s}","author":{"username":"ann","bio":null,"image":null,"following":false}}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"bob","email":"bob@example.org","bio":null,"image":null,"token":"${b}"}}
+reply c 403
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["forbidden"]}}
+reply c 404
+  header "content-type" "application/json; charset=utf-8"
+  body json {"errors":{"body":["not found"]}}
+exit 0

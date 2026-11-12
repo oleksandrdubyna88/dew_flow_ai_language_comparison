@@ -1,0 +1,35 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"ann","email":"ann@example.org","bio":null,"image":null,"token":"${a}"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"bob","email":"bob@example.org","bio":null,"image":null,"token":"${b}"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"profile":{"username":"ann","bio":null,"image":null,"following":true}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"article":{"slug":"one","title":"One","description":"First","body":"Body one.","tagList":["x"],"createdAt":"${:ts~10s}","updatedAt":"${t1}","author":{"username":"ann","bio":null,"image":null,"following":false}}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"article":{"slug":"two","title":"Two","description":"Second","body":"Body two.","tagList":["x","y"],"createdAt":"${:ts~10s}","updatedAt":"${t2}","author":{"username":"ann","bio":null,"image":null,"following":false}}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"articles":[{"slug":"two","title":"Two","description":"Second","body":"Body two.","tagList":["x","y"],"createdAt":"${t2}","updatedAt":"${t2}","author":{"username":"ann","bio":null,"image":null,"following":true}}],"articlesCount":2}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"articles":[{"slug":"one","title":"One","description":"First","body":"Body one.","tagList":["x"],"createdAt":"${t1}","updatedAt":"${t1}","author":{"username":"ann","bio":null,"image":null,"following":false}}],"articlesCount":2}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"comment":{"id":1,"body":"Nice.","createdAt":"${:ts~10s}","updatedAt":"${c1}","author":{"username":"bob","bio":null,"image":null,"following":false}}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"comments":[{"id":1,"body":"Nice.","createdAt":"${c1}","updatedAt":"${c1}","author":{"username":"bob","bio":null,"image":null,"following":false}}]}
+reply c 204
+  body empty
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"comments":[]}
+exit 0
