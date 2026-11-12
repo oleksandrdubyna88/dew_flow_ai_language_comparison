@@ -57,11 +57,13 @@ keyed with the UTF-8 bytes of the environment variable `JWT_SECRET` (R17), over 
 user may be equal or different.
 
 **R7.** A token presented in a request is *valid* when all of the following hold, and *invalid* otherwise: it has
-exactly three non-empty parts joined by `.`, each in the alphabet of R6 and without `=`; the first
-part decodes to a JSON object whose `alg` member is the string `HS256` (its other members are not examined); the third
-part decodes to exactly the HMAC-SHA256 of R6 over the first part, the `.` and the second part exactly as received,
-keyed with `JWT_SECRET`; the second part decodes to a JSON object whose `sub` member is the username of an existing
-user and whose `exp` member is a JSON integer greater than the current time in whole seconds since
+exactly three non-empty parts joined by `.`, each the exact base64url encoding of R6, without `=`, of the bytes it
+decodes to (a part whose length is one more than a multiple of four, or whose last character sets bits the encoding
+leaves unused, is not); the first part decodes to a JSON object whose `alg` member is the string `HS256` (its other
+members are not examined); the third part decodes to exactly the HMAC-SHA256 of R6 over the first part, the `.` and
+the second part exactly as received, keyed with `JWT_SECRET`; the second part decodes to a JSON object whose `sub`
+member is the username of an existing user and whose `exp` member is a JSON number written as decimal digits, with an
+optional `-` and no fraction part or exponent, greater than the current time in whole seconds since
 1970-01-01T00:00:00Z. The user a valid token names is the one its `sub` names. A token the tests build themselves to
 these rules — with the test's `JWT_SECRET`, an `exp` in the future and an existing user — is valid; a token whose
 signature does not match, whose `exp` is not in the future or whose `sub` names no user is invalid. A token's
