@@ -191,7 +191,7 @@ serving every later request exactly as if the failed request had been a rule of 
 | `not-a-property` | 400 | `get` or `set` names an operation |
 | `not-callable` | 400 | `call` names a property |
 | `read-only` | 400 | `set` names a read-only property |
-| `arity` | 400 | the number of arguments differs from the number of the operation's parameters |
+| `arity` | 400 | `args` is absent (no arguments) or a JSON array, and its number of arguments differs from the number of the operation's parameters |
 | `argument` | 400 | a set step has no `value` member; or `args` is present and is not a JSON array; or `value`, or an argument, cannot be converted to the type of the property or parameter as 3.6 says — for arguments, the first one that cannot |
 | `operation` | 422 | the operation fails as its row in 1.2 says, the arguments having been converted |
 
@@ -293,7 +293,8 @@ request is 1 to 64 characters long, and the `<name>` of `GET /objects/<name>` ho
 the range of R2; every `decimal` in a request, and every `decimal` a step produces, has at most four fraction digits and
 a magnitude below 1 000 000 000; every `string` value is at most 256 characters long. A JSON number in a request is
 written as decimal digits with an optional leading minus sign and an optional fraction part of one or more digits, never
-with an exponent; a JSON number meant as an `integer` carries no fraction part.
+with an exponent; a JSON number meant as an `integer` carries no fraction part. No string in a request holds a `\u`
+escape of a lone surrogate (a code from `D800` to `DFFF` that is not part of a pair).
 
 ## 5. Build and run — the workspace contract
 
