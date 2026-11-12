@@ -41,8 +41,10 @@ are unchanged, every other connection continues, and the program does not exit.
 seconds, leaving no process it started still running. A program still running after 5 seconds is killed and fails that
 test, and so does one that exits with another status or leaves a process running.
 
-**R7.** On SIGTERM the program, at the current time t, cancels every job of every DAG that is not in a final state, as a
-`cancel` request for each DAG at t would (R14), and then writes to standard output one line per DAG it holds, in the
+**R7.** On SIGTERM the program, at the current time t, cancels every job of every DAG that is not in a final state, all at
+once: each such job changes as a `cancel` request at t changes it (R14) — a running job's attempt ends at t with the
+result `cancelled`, and a job that is pending, ready or in backoff is cancelled with no new attempt — and no scheduling
+step runs, so no attempt starts at the stop. Then it writes to standard output one line per DAG it holds, in the
 order of submission: the report object of the DAG (R26) exactly as a `report` request would then answer it, without the
 `{"ok":true,"report":` wrapper, followed by one line feed. Then it exits. The tests read these lines. The program does
 not wait for a client to disconnect and may close every connection at once. The tests send SIGTERM only after they have
@@ -173,7 +175,8 @@ backoff that ends at t ends, and its job becomes ready at t — a backoff of 0 t
 instant ends here; (3) every pending job whose dependencies have all succeeded becomes ready at t, and every pending
 job that depends on a failed or skipped job becomes skipped, through the whole DAG (R19); (4) the scheduling step
 (R23) runs at t. A submission (R12) and a cancellation (R14) at a time t apply their own changes and then run the
-scheduling step at t. Nothing else changes a job's state.
+scheduling step at t; the stop (R7) applies its own changes and runs no scheduling step. Nothing else changes a job's
+state.
 
 **R25.** There is one clock and one set of DAGs for all connections. Every request is processed whole, one at a time: no
 two requests interleave, and the requests from all connections are processed in some single order that respects each
