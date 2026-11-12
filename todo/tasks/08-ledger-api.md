@@ -213,7 +213,7 @@ this peak, and no other measurement of memory passes or fails a test. The progra
 at most 512 processes and threads together. Beyond that the system refuses to create another, and a run that needs more
 fails that test.
 
-**R31.** The load of a test stays within these bounds: at most 8 client connections are open at once; at most 20 000
+**R31.** The load of a test stays within these bounds: at most 16 client connections are open at once; at most 20 000
 requests are sent in one test; a request body is at most 65 536 bytes (so a body of 4 097 to 65 536 bytes occurs and
 is answered 413); one test creates at most 2 000 accounts and uses at most 20 000 different keys.
 
