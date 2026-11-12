@@ -1,0 +1,15 @@
+transcript 2
+ready
+reply c 404
+  header "content-type" "application/json; charset=utf-8"
+  body json {"error":"unknown-member","step":1}
+reply c 400
+  header "content-type" "application/json; charset=utf-8"
+  body json {"error":"arity","step":0}
+reply c 422
+  header "content-type" "application/json; charset=utf-8"
+  body json {"error":"operation","step":0}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"name":"visits","type":"counter","properties":{"id":1000000007,"label":"front door","count":1,"stride":1,"limit":null}}
+exit 0
