@@ -171,7 +171,7 @@ its result is the property's new value. A call step converts each argument to it
 operation, and its result is the operation's result — null for an operation whose result type is `→ null`.
 
 **R19.** When every step succeeds, the reply has status 200 and the body `{"rule": "<token>", "results": [ {"value":
-<value0>}, {"value": <value1>}, … ]}` with exactly one entry per step, in the order of the steps, `<vi>` being the result of step
+<value0>}, {"value": <value1>}, … ]}` with exactly one entry per step, in the order of the steps, `<valuei>` being the result of step
 i written as R15 says. `rule` is a *token* the service chooses: a string of 1 to 64 characters from `A`–`Z`, `a`–`z`,
 `0`–`9`, `.`, `_`, `~` and `-`, different from every token the process has issued before. The service keeps the body it
 answered under that token for `GET /rules/<token>` (R24).
