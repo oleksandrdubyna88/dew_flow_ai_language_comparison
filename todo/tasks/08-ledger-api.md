@@ -138,7 +138,7 @@ code, chosen with its status from this table:
 | 409 | `idempotency-key-mismatch` | `POST /transfers` with a key already fixed, and a body that differs from the recorded one (R9) |
 | 404 | `not-found` | `GET /accounts/<id>` or `GET /transfers/<id>` where no account, or no transfer, has that id |
 | 422 | `invalid-amount` | `openingBalance` or `amount` is not a money value of R2; or `amount` is `0.00` |
-| 422 | `same-account` | `from` and `to` are equal |
+| 422 | `same-account` | `from` and `to` are equal: both are JSON strings with the same characters (a value that is not a JSON string is equal to no other value and is the id of no account) |
 | 422 | `unknown-account` | `from`, or else `to`, is not the id of an account |
 | 422 | `insufficient-funds` | the balance of `from` is less than `amount` plus the fee of `amount` (R6, R7) |
 
