@@ -1,0 +1,24 @@
+scenario 2
+# Four keys, events out of order. A key's event below the watermark is
+# late and dropped even while the key has open windows. One advance closes
+# five windows: the lines come by window start, then by key; the keys
+# whose last window closed are expired after them. SIGTERM flushes the
+# rest and the program writes its end line before exiting.
+default within 2s
+start ready stdout "{\"type\":\"ready\"}" within 10s
+# 1. Out of order but not late: b at 7000, then a at 6000 (watermark 4000).
+send stdin "{\"key\":\"b\",\"ts\":7000,\"value\":3}\n" "{\"key\":\"a\",\"ts\":6000,\"value\":10}\n"
+# 2. c at 12000 moves the watermark to 9000; a at 5000 is now late.
+send stdin "{\"key\":\"c\",\"ts\":12000,\"value\":2}\n" "{\"key\":\"a\",\"ts\":5000,\"value\":4}\n"
+recv stdout lines 1
+# 3. b at 9500 is accepted: 9500 is not below the watermark 9000.
+send stdin "{\"key\":\"b\",\"ts\":9500,\"value\":1}\n"
+expect stdout quiet for 300ms
+# 4. d at 20000 moves the watermark to 17000: windows ending at 10000 and 15000 close.
+send stdin "{\"key\":\"d\",\"ts\":20000,\"value\":0}\n"
+recv stdout lines 7
+# 5. The stop: open windows, then every live key, then the end line.
+sleep 1s
+signal TERM
+recv stdout lines 6
+wait-exit within 5s
