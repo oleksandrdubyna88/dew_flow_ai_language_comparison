@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running HTTP server that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `proceed` · 2026-11-17 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
@@ -137,7 +137,7 @@ client connections are open; the program may close them.
 signing key of R6, a text of 1 to 256 characters from `A`–`Z`, `a`–`z`, `0`–`9`, `-`, `_` and `.`, used as its UTF-8
 bytes. `TOKEN_TTL_SECONDS` holds the lifetime of a token in whole seconds, decimal digits denoting a number from 1 to
 86 400. Both are fixed for the life of the process. A test may also set the environment variable `TZ` to the name of
-any time zone, or leave it unset; no reply depends on it (R3).
+any time zone, or leave it as the base environment sets it (R50); no reply depends on it (R3).
 
 ## 3. Interface
 
