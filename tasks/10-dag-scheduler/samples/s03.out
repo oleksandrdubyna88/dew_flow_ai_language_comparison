@@ -1,0 +1,13 @@
+transcript 2
+ready
+# 1. Submit; a takes the slot at 0.
+recv c1 "{\"ok\":true}\n"
+# 2. To 200: a timed out at 100 and waits; c ran 100-150; d ran 150-160 and failed; a restarts at 200.
+recv c1 "{\"ok\":true,\"now\":200}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":200,\"done\":false,\"jobs\":[{\"id\":\"a\",\"state\":\"running\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"timeout\"},{\"n\":2,\"start\":200,\"end\":null,\"result\":null}]},{\"id\":\"b\",\"state\":\"pending\",\"attempts\":[]},{\"id\":\"c\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":150,\"result\":\"ok\"}]},{\"id\":\"d\",\"state\":\"backoff\",\"attempts\":[{\"n\":1,\"start\":150,\"end\":160,\"result\":\"fail\"}]}]}}\n"
+# 3. To 600: d retried at 300; a failed at 550; b skipped.
+recv c1 "{\"ok\":true,\"now\":600}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":600,\"done\":true,\"jobs\":[{\"id\":\"a\",\"state\":\"failed\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"timeout\"},{\"n\":2,\"start\":200,\"end\":300,\"result\":\"timeout\"},{\"n\":3,\"start\":450,\"end\":550,\"result\":\"timeout\"}]},{\"id\":\"b\",\"state\":\"skipped\",\"attempts\":[]},{\"id\":\"c\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":150,\"result\":\"ok\"}]},{\"id\":\"d\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":150,\"end\":160,\"result\":\"fail\"},{\"n\":2,\"start\":300,\"end\":310,\"result\":\"ok\"}]}]}}\n"
+# 4. The stop.
+recv stdout "{\"dag\":\"d1\",\"now\":600,\"done\":true,\"jobs\":[{\"id\":\"a\",\"state\":\"failed\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"timeout\"},{\"n\":2,\"start\":200,\"end\":300,\"result\":\"timeout\"},{\"n\":3,\"start\":450,\"end\":550,\"result\":\"timeout\"}]},{\"id\":\"b\",\"state\":\"skipped\",\"attempts\":[]},{\"id\":\"c\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":150,\"result\":\"ok\"}]},{\"id\":\"d\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":150,\"end\":160,\"result\":\"fail\"},{\"n\":2,\"start\":300,\"end\":310,\"result\":\"ok\"}]}]}\n"
+exit 0

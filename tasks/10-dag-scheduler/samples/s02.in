@@ -1,0 +1,28 @@
+scenario 2
+# Two slots. d1 has four independent jobs; d2, submitted at the same
+# instant, has one. Ready jobs start in the order they became ready, then
+# by DAG, then by position: a and b at 0; c and d at 100; e at 150. One
+# tick of 300 ms carries every instant.
+default within 2s
+env SLOTS "2"
+start ready port within 10s
+connect c1 tcp
+# 1. Two submissions at time 0.
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"a\",\"deps\":[],\"duration\":100,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"b\",\"deps\":[],\"duration\":100,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"c\",\"deps\":[],\"duration\":50,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"d\",\"deps\":[],\"duration\":50,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d2\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"e\",\"deps\":[],\"duration\":100,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d2\"}\n"
+recv c1 lines 1
+# 2. One tick to 300.
+send c1 "{\"cmd\":\"tick\",\"ms\":300}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d1\"}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d2\"}\n"
+recv c1 lines 1
+# 3. The stop.
+close c1
+signal TERM
+recv stdout lines 2
+wait-exit within 5s

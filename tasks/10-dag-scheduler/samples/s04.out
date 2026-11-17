@@ -1,0 +1,17 @@
+transcript 2
+ready
+# 1. Rejected: a cycle through three jobs; a dependency on no job; two jobs named x.
+recv c1 "{\"ok\":false,\"error\":\"cycle\"}\n"
+recv c1 "{\"ok\":false,\"error\":\"unknown-dependency\"}\n"
+recv c1 "{\"ok\":false,\"error\":\"duplicate-job\"}\n"
+# 2. Accepted: p, then q which names p twice; the same DAG id is then refused.
+recv c1 "{\"ok\":true}\n"
+recv c1 "{\"ok\":false,\"error\":\"duplicate-dag\"}\n"
+# 3. 50 ms in, cancel d1: p's attempt ends at 50 as cancelled, q is cancelled, the DAG is done.
+recv c1 "{\"ok\":true,\"now\":50}\n"
+recv c1 "{\"ok\":true}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":50,\"done\":true,\"jobs\":[{\"id\":\"p\",\"state\":\"cancelled\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":50,\"result\":\"cancelled\"}]},{\"id\":\"q\",\"state\":\"cancelled\",\"attempts\":[]}]}}\n"
+recv c1 "{\"ok\":false,\"error\":\"unknown-dag\"}\n"
+# 4. The stop: the report of the one accepted DAG.
+recv stdout "{\"dag\":\"d1\",\"now\":50,\"done\":true,\"jobs\":[{\"id\":\"p\",\"state\":\"cancelled\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":50,\"result\":\"cancelled\"}]},{\"id\":\"q\",\"state\":\"cancelled\",\"attempts\":[]}]}\n"
+exit 0
