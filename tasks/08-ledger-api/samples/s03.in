@@ -1,0 +1,69 @@
+scenario 2
+# Each error of a transfer; a failed key replayed after the funds arrived
+# stays failed; an unknown transfer id.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"2.00"}
+recv c capture a json $.account.id as uuid
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"5.00"}
+recv c capture b json $.account.id as uuid
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e1"
+  body json {"from":"${a}","to":"${b}","amount":"1.5"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e2"
+  body json {"from":"${a}","to":"${a}","amount":"2.00"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e3"
+  body json {"from":"${a}","to":"no-such-account","amount":"2.00"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e4"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e5"
+  body json {"from":"${b}","to":"${a}","amount":"2.00"}
+recv c capture t json $.transfer.id as uuid
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "e4"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c
+
+request c GET "/accounts/${a}"
+recv c
+
+request c GET "/accounts/${b}"
+recv c
+
+request c GET "/transfers/00000000-0000-0000-0000-000000000000"
+recv c
+
+signal TERM
+wait-exit within 5s

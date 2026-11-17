@@ -1,0 +1,42 @@
+scenario 2
+# Two clients send one key with equal bodies at the same instant: one transfer,
+# two identical replies.
+default within 2s
+start ready port within 10s
+connect x http
+connect y http
+
+request x POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"50.00"}
+recv x capture a json $.account.id as uuid
+
+request x POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"0.00"}
+recv x capture b json $.account.id as uuid
+
+together
+  request x POST "/transfers"
+    header "content-type" "application/json"
+    header "idempotency-key" "race-1"
+    body json {"from":"${a}","to":"${b}","amount":"20.00"}
+  request y POST "/transfers"
+    header "content-type" "application/json"
+    header "idempotency-key" "race-1"
+    body json {"from":"${a}","to":"${b}","amount":"20.00"}
+end
+recv x capture t json $.transfer.id as uuid
+recv y
+
+request x GET "/accounts/${a}"
+recv x
+
+request y GET "/accounts/${b}"
+recv y
+
+request x GET "/fees"
+recv x
+
+signal TERM
+wait-exit within 5s
