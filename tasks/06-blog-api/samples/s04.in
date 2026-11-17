@@ -1,0 +1,56 @@
+scenario 2
+# Error replies: a taken username, a wrong password, a missing header, a
+# stranger's delete, an unknown slug; a token built by the test from the
+# secret is accepted, an expired one is not.
+default within 2s
+env JWT_SECRET "sample-secret"
+env TOKEN_TTL_SECONDS "3600"
+start ready port within 10s
+connect c http
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"ann","email":"ann@example.org","password":"correct horse"}}
+recv c capture a json $.user.token as token
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"ann","email":"other@example.org","password":"correct horse"}}
+recv c
+
+request c POST "/api/users/login"
+  header "content-type" "application/json"
+  body json {"user":{"email":"ann@example.org","password":"wrong horse"}}
+recv c
+
+request c GET "/api/user"
+recv c
+
+request c GET "/api/user"
+  header "authorization" "Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbm4iLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6NDEwMjQ0NDgwMH0.tuM7HFn6-cRH5grJaE6iX4jGj9dLcEzcOMIqoALVUNA"
+recv c
+
+request c GET "/api/user"
+  header "authorization" "Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbm4iLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.-utSF76SLp7TJLpgFFvE71OL3P9Y8kxg6R_7JQdbRB8"
+recv c
+
+request c POST "/api/articles"
+  header "content-type" "application/json"
+  header "authorization" "Token ${a}"
+  body json {"article":{"title":"Hi there","description":"Short","body":"Text."}}
+recv c
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"bob","email":"bob@example.org","password":"hunter2hunter2"}}
+recv c capture b json $.user.token as token
+
+request c DELETE "/api/articles/hi-there"
+  header "authorization" "Token ${b}"
+recv c
+
+request c GET "/api/articles/nothing-here"
+recv c
+
+signal TERM
+wait-exit within 5s
