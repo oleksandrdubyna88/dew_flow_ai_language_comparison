@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running HTTP server that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `proceed` · 2026-11-17 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
