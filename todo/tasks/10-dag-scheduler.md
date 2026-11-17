@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running program that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `proceed` · 2026-11-17 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
@@ -26,7 +26,7 @@ file, and keeps nothing across a stop.
 ## 2. Start, readiness and stop
 
 **R3.** The environment variable `PORT` holds a TCP port number; the program listens on it, and the tests connect to it
-at 127.0.0.1. The tests also set the variable `SLOTS` (R22) and may set `CLOCK` (R20); they set no other variable
+at 127.0.0.1. The tests may set the variable `SLOTS` (R22) and the variable `CLOCK` (R20); they set no other variable
 beyond the base environment of R36. The program is started with no arguments, and its standard input receives nothing.
 
 **R4.** The program is ready when it accepts a TCP connection on that port. A test waits at most 10 seconds for
@@ -34,8 +34,11 @@ readiness; a program that is not ready by then fails that test.
 
 **R5.** The program keeps serving whatever any one client does. A client may connect and disconnect without sending a
 byte (the readiness probe does exactly that), may disconnect in the middle of a request, or may disconnect while replies
-to it are still unsent; in each case the program drops that connection and its unfinished input, the DAGs and the clock
-are unchanged, every other connection continues, and the program does not exit.
+to it are still unsent; in each case the program drops that connection and the incomplete request at its end, if any;
+the disconnect itself changes neither the DAGs nor the clock, every other connection continues, and the program does
+not exit. A client may instead shut down only its sending side (a half-close) after its last complete request and go on
+reading: that is not a disconnect. The program processes every complete request that arrived before the half-close,
+writes each reply as R8 says, and may close the connection after the last one.
 
 **R6.** A test ends by sending the signal SIGTERM to the program. The program must then exit with status 0 within 5
 seconds, leaving no process it started still running. A program still running after 5 seconds is killed and fails that
