@@ -1,0 +1,12 @@
+transcript 2
+ready
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"rule":"${r}","results":[{"value":3},{"value":13},{"value":16},{"value":16}]}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"rule":"${r}","results":[{"value":3},{"value":13},{"value":16},{"value":16}]}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"rule":"${:token}","results":[{"value":null},{"value":null},{"value":21},{"value":22}]}
+exit 0

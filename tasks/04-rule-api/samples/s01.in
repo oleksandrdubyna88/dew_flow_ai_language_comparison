@@ -1,0 +1,16 @@
+scenario 2
+# Read one object; then a rule of two steps on another: a property read and a call.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c GET "/objects/visits"
+recv c
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"boiler","get":"reading"},{"object":"boiler","call":"corrected"}]}
+recv c
+
+signal TERM
+wait-exit within 5s
