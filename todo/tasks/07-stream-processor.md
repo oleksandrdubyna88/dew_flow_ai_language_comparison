@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running program that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `proceed` · 2026-11-17 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
@@ -110,8 +110,8 @@ before `_`, which comes before `a`; `k-1`, `k.1`, `k1`, `k10`, `k2` stand in tha
 
 **R15.** The **flush**, performed at the end of input (R5) and on SIGTERM (R6), closes every existing window as if the
 watermark had advanced beyond every window's end, and then expires every live key: it writes the window lines of all
-existing windows in the order of R12 (by start, then by key), then the expired line of every key that is live after
-those windows closed, in the order of the keys, then one **end line** `{"type":"end","accepted":<A>,"late":<B>}`, where
+existing windows in the order of R12 (by start, then by key), then the expired line of every key that was live when
+the flush began, in the order of the keys, then one **end line** `{"type":"end","accepted":<A>,"late":<B>}`, where
 A is the number of accepted events and B the number of late events over the whole run. After the end line the program
 writes nothing more and exits (R5, R6).
 
