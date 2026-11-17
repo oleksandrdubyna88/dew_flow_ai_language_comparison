@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Kind | a long-running HTTP server that serves until it is stopped by SIGTERM |
-| Gate verdict | not yet gated |
+| Gate verdict | `good_enough` · 2026-11-17 |
 | Freeze tag | none yet |
 | Freeze rule | this text changes only by a dated amendment from its authors |
 | Amendments | none yet |
@@ -165,6 +165,9 @@ strings:
 | set | `{"object": "<name>", "set": "<property>", "value": <JSON value>}` | set the property to the value |
 | call | `{"object": "<name>", "call": "<operation>", "args": [ <JSON value>, … ]}` | call the operation with the arguments, in order; `args` may be left out, and an absent `args` is an empty argument list |
 
+A set step may also lack `value`, and a call step's `args` may be any JSON value; such a step has one of these
+shapes and fails as R21 says (`argument`).
+
 **R18.** The steps are applied in the order of the array, each one against the state the steps before it left. A read
 step's result is the property's current value. A set step converts `value` to the property's type (3.6), stores it, and
 its result is the property's new value. A call step converts each argument to its parameter's type (3.6), runs the
@@ -293,8 +296,9 @@ request is 1 to 64 characters long, and the `<name>` of `GET /objects/<name>` ho
 the range of R2; every `decimal` in a request, and every `decimal` a step produces, has at most four fraction digits and
 a magnitude below 1 000 000 000; every `string` value is at most 256 characters long. A JSON number in a request is
 written as decimal digits with an optional leading minus sign and an optional fraction part of one or more digits, never
-with an exponent; a JSON number meant as an `integer` carries no fraction part. No string in a request holds a `\u`
-escape of a lone surrogate (a code from `D800` to `DFFF` that is not part of a pair).
+with an exponent; a JSON number that a test sends for an `integer` and expects to be accepted carries no fraction
+part, while a number with a fraction part sent for an `integer` is an `argument` failure (R26) and may occur.
+No string in a request holds a `\u` escape of a lone surrogate (a code from `D800` to `DFFF` that is not part of a pair).
 
 ## 5. Build and run — the workspace contract
 
