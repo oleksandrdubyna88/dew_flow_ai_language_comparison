@@ -165,8 +165,9 @@ strings:
 | set | `{"object": "<name>", "set": "<property>", "value": <JSON value>}` | set the property to the value |
 | call | `{"object": "<name>", "call": "<operation>", "args": [ <JSON value>, … ]}` | call the operation with the arguments, in order; `args` may be left out, and an absent `args` is an empty argument list |
 
-A set step may also lack `value`, and a call step's `args` may be any JSON value; such a step has one of these
-shapes and fails as R21 says (`argument`).
+Two departures from these shapes may occur: a set step without `value`, and a call step whose `args` is present but
+is not a JSON array. Such a step fails as R21 and R22 say: an `argument` failure, unless a condition earlier in R21's
+table holds (R22).
 
 **R18.** The steps are applied in the order of the array, each one against the state the steps before it left. A read
 step's result is the property's current value. A set step converts `value` to the property's type (3.6), stores it, and
