@@ -1,0 +1,27 @@
+scenario 2
+# Three failures - an unknown member after an applied step, a wrong number of
+# arguments, an operation that fails - and the state they leave.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"visits","call":"increment"},{"object":"visits","get":"pressure"}]}
+recv c
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"boiler","call":"corrected","args":[1]}]}
+recv c
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"attic","call":"shift","args":[1]}]}
+recv c
+
+request c GET "/objects/visits"
+recv c
+
+signal TERM
+wait-exit within 5s

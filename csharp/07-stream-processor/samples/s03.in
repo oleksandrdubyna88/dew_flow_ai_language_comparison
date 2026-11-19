@@ -1,0 +1,15 @@
+scenario 2
+# Values at the ends of the 64-bit range and just above 2^53, summed
+# exactly. The first line arrives in two pieces, cut inside the number;
+# the next two arrive in one write. Nothing closes before end of input.
+default within 2s
+start ready stdout "{\"type\":\"ready\"}" within 10s
+# 1. One line in two pieces, cut after the digits 900719.
+send stdin "{\"key\":\"n\",\"ts\":10000,\"value\":9007199254740993}\n" split 36 pause 100ms
+send stdin "{\"key\":\"n\",\"ts\":10001,\"value\":-1}\n" "{\"key\":\"m\",\"ts\":10002,\"value\":9223372036854775807}\n"
+send stdin "{\"key\":\"m\",\"ts\":10003,\"value\":-9223372036854775807}\n"
+expect stdout quiet for 300ms
+# 2. End of input.
+close stdin
+recv stdout lines 7
+wait-exit within 5s

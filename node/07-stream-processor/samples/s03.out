@@ -1,0 +1,13 @@
+transcript 2
+ready
+# 1. One line in two pieces, cut after the digits 900719.
+quiet stdout
+# 2. End of input.
+recv stdout "{\"type\":\"window\",\"key\":\"m\",\"start\":5000,\"end\":15000,\"count\":2,\"sum\":0,\"min\":-9223372036854775807,\"max\":9223372036854775807}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"n\",\"start\":5000,\"end\":15000,\"count\":2,\"sum\":9007199254740992,\"min\":-1,\"max\":9007199254740993}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"m\",\"start\":10000,\"end\":20000,\"count\":2,\"sum\":0,\"min\":-9223372036854775807,\"max\":9223372036854775807}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"n\",\"start\":10000,\"end\":20000,\"count\":2,\"sum\":9007199254740992,\"min\":-1,\"max\":9007199254740993}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"m\"}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"n\"}\n"
+recv stdout "{\"type\":\"end\",\"accepted\":4,\"late\":0}\n"
+exit 0

@@ -1,0 +1,21 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${a}","balance":"100.00"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${b}","balance":"0.00"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"transfer":{"id":"${t}","from":"${a}","to":"${b}","amount":"40.00","fee":"0.20"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${a}","balance":"59.80"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${b}","balance":"40.00"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"fees":{"collected":"0.20"}}
+exit 0

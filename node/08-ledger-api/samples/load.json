@@ -1,0 +1,8 @@
+{
+  "memoryLimitBytes": 536870912,
+  "memoryLimitMiB": 512,
+  "heap": {
+    "NODE_OPTIONS": "--max-old-space-size=460"
+  },
+  "note": "the enforced memory limit of every test; the program is stopped above it"
+}

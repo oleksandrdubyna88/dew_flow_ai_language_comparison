@@ -1,0 +1,29 @@
+scenario 2
+# Expiry: SET with a lifetime in milliseconds, read before and after it has
+# passed; EXPIRE on an absent key and on a present one; the key gone after
+# the lifetime set by EXPIRE. The pauses leave a wide margin on both sides
+# of each expiry instant.
+default within 2s
+start ready port within 10s
+connect c1 tcp
+send c1 "*5\r\n$3\r\nSET\r\n$5\r\nfruit\r\n$5\r\nmango\r\n$2\r\nPX\r\n$4\r\n1500\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\nfruit\r\n"
+recv c1 until "\r\n" count 2
+sleep 2500ms
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\nfruit\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$6\r\nEXPIRE\r\n$5\r\nfruit\r\n$2\r\n10\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$3\r\nSET\r\n$5\r\nfruit\r\n$5\r\nmango\r\n"
+recv c1 until "\r\n"
+send c1 "*3\r\n$6\r\nEXPIRE\r\n$5\r\nfruit\r\n$1\r\n1\r\n"
+recv c1 until "\r\n"
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\nfruit\r\n"
+recv c1 until "\r\n" count 2
+sleep 2s
+send c1 "*2\r\n$3\r\nGET\r\n$5\r\nfruit\r\n"
+recv c1 until "\r\n"
+close c1
+signal TERM
+wait-exit within 5s

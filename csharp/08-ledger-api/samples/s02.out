@@ -1,0 +1,30 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${a}","balance":"10.00"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${b}","balance":"0.00"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"transfer":{"id":"${t}","from":"${a}","to":"${b}","amount":"2.00","fee":"0.01"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"transfer":{"id":"${t}","from":"${a}","to":"${b}","amount":"2.00","fee":"0.01"}}
+reply c 409
+  header "content-type" "application/json; charset=utf-8"
+  body json {"error":"idempotency-key-mismatch"}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${a}","balance":"7.99"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"transfer":{"id":"${t}","from":"${a}","to":"${b}","amount":"2.00","fee":"0.01"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"transfer":{"id":"${u}","from":"${a}","to":"${b}","amount":"2.00","fee":"0.01"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"account":{"id":"${b}","balance":"4.00"}}
+exit 0

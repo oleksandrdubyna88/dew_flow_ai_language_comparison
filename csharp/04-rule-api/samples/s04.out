@@ -1,0 +1,14 @@
+transcript 2
+ready
+unordered
+  reply * 200
+    header "content-type" "application/json; charset=utf-8"
+    body json {"rule":"${:token}","results":[{"value":1}]}
+  reply * 200
+    header "content-type" "application/json; charset=utf-8"
+    body json {"rule":"${:token}","results":[{"value":2}]}
+end
+reply a 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"name":"visits","type":"counter","properties":{"id":1000000007,"label":"front door","count":2,"stride":1,"limit":null}}
+exit 0

@@ -1,0 +1,28 @@
+scenario 2
+# One slot. a times out every attempt (duration 300, timeout 100, two
+# retries; backoff 100 then 150 with base 100, cap 150) and fails at 550;
+# b depends on a and is skipped. c and d run while a waits in backoff:
+# backoff holds no slot. d fails once (results fail, ok), retries after
+# 100 ms and succeeds. Two reports: during the run and at the end.
+default within 2s
+env SLOTS "1"
+start ready port within 10s
+connect c1 tcp
+# 1. Submit; a takes the slot at 0.
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":150},\"jobs\":[{\"id\":\"a\",\"deps\":[],\"duration\":300,\"timeout\":100,\"retries\":2,\"results\":[\"ok\"]},{\"id\":\"b\",\"deps\":[\"a\"],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"c\",\"deps\":[],\"duration\":50,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"d\",\"deps\":[],\"duration\":10,\"timeout\":0,\"retries\":1,\"results\":[\"fail\",\"ok\"]}]}\n"
+recv c1 lines 1
+# 2. To 200: a timed out at 100 and waits; c ran 100-150; d ran 150-160 and failed; a restarts at 200.
+send c1 "{\"cmd\":\"tick\",\"ms\":200}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d1\"}\n"
+recv c1 lines 1
+# 3. To 600: d retried at 300; a failed at 550; b skipped.
+send c1 "{\"cmd\":\"tick\",\"ms\":400}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d1\"}\n"
+recv c1 lines 1
+# 4. The stop.
+close c1
+signal TERM
+recv stdout lines 1
+wait-exit within 5s

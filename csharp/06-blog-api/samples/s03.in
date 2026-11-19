@@ -1,0 +1,61 @@
+scenario 2
+# Two users; a follow; two articles; the list with a limit, then filtered by a
+# tag with an offset; a comment created, listed and deleted.
+default within 2s
+env JWT_SECRET "sample-secret"
+env TOKEN_TTL_SECONDS "3600"
+start ready port within 10s
+connect c http
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"ann","email":"ann@example.org","password":"correct horse"}}
+recv c capture a json $.user.token as token
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"bob","email":"bob@example.org","password":"hunter2hunter2"}}
+recv c capture b json $.user.token as token
+
+request c POST "/api/profiles/ann/follow"
+  header "authorization" "Token ${b}"
+recv c
+
+request c POST "/api/articles"
+  header "content-type" "application/json"
+  header "authorization" "Token ${a}"
+  body json {"article":{"title":"One","description":"First","body":"Body one.","tagList":["x"]}}
+recv c capture t1 json $.article.createdAt as ts
+
+request c POST "/api/articles"
+  header "content-type" "application/json"
+  header "authorization" "Token ${a}"
+  body json {"article":{"title":"Two","description":"Second","body":"Body two.","tagList":["x","y"]}}
+recv c capture t2 json $.article.createdAt as ts
+
+request c GET "/api/articles?limit=1"
+  header "authorization" "Token ${b}"
+recv c
+
+request c GET "/api/articles?tag=x&offset=1"
+recv c
+
+request c POST "/api/articles/one/comments"
+  header "content-type" "application/json"
+  header "authorization" "Token ${b}"
+  body json {"comment":{"body":"Nice."}}
+recv c capture c1 json $.comment.createdAt as ts
+
+request c GET "/api/articles/one/comments"
+  header "authorization" "Token ${a}"
+recv c
+
+request c DELETE "/api/articles/one/comments/1"
+  header "authorization" "Token ${b}"
+recv c
+
+request c GET "/api/articles/one/comments"
+recv c
+
+signal TERM
+wait-exit within 5s

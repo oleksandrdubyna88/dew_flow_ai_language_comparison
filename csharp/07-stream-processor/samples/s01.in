@@ -1,0 +1,18 @@
+scenario 2
+# One key. Two events in one write open the windows [5000,15000) and
+# [10000,20000); nothing is written until the watermark passes a window's
+# end. The third event raises the watermark to 23000 and closes both. End
+# of input closes the two windows that remain, expires the key, writes the
+# end line, and the program exits by itself.
+default within 2s
+start ready stdout "{\"type\":\"ready\"}" within 10s
+# 1. Two events, no output yet.
+send stdin "{\"key\":\"a\",\"ts\":11000,\"value\":5}\n" "{\"key\":\"a\",\"ts\":13000,\"value\":7}\n"
+expect stdout quiet for 300ms
+# 2. The watermark advances to 23000: two windows close.
+send stdin "{\"key\":\"a\",\"ts\":26000,\"value\":1}\n"
+recv stdout lines 2
+# 3. End of input: the flush.
+close stdin
+recv stdout lines 4
+wait-exit within 5s

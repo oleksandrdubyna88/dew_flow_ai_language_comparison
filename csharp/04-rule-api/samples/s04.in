@@ -1,0 +1,23 @@
+scenario 2
+# Two clients increment the same counter at the same instant.
+default within 2s
+start ready port within 10s
+connect a http
+connect b http
+
+together
+  request a POST "/rules"
+    header "content-type" "application/json"
+    body json {"steps":[{"object":"visits","call":"increment"}]}
+  request b POST "/rules"
+    header "content-type" "application/json"
+    body json {"steps":[{"object":"visits","call":"increment"}]}
+end
+recv a
+recv b
+
+request a GET "/objects/visits"
+recv a
+
+signal TERM
+wait-exit within 5s

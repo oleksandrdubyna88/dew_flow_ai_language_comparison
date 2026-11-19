@@ -1,0 +1,23 @@
+transcript 2
+ready
+# 1. Out of order but not late: b at 7000, then a at 6000 (watermark 4000).
+# 2. c at 12000 moves the watermark to 9000; a at 5000 is now late.
+recv stdout "{\"type\":\"late\",\"key\":\"a\",\"ts\":5000}\n"
+# 3. b at 9500 is accepted: 9500 is not below the watermark 9000.
+quiet stdout
+# 4. d at 20000 moves the watermark to 17000: windows ending at 10000 and 15000 close.
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":0,\"end\":10000,\"count\":1,\"sum\":10,\"min\":10,\"max\":10}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"b\",\"start\":0,\"end\":10000,\"count\":2,\"sum\":4,\"min\":1,\"max\":3}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":5000,\"end\":15000,\"count\":1,\"sum\":10,\"min\":10,\"max\":10}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"b\",\"start\":5000,\"end\":15000,\"count\":2,\"sum\":4,\"min\":1,\"max\":3}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"c\",\"start\":5000,\"end\":15000,\"count\":1,\"sum\":2,\"min\":2,\"max\":2}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"a\"}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"b\"}\n"
+# 5. The stop: open windows, then every live key, then the end line.
+recv stdout "{\"type\":\"window\",\"key\":\"c\",\"start\":10000,\"end\":20000,\"count\":1,\"sum\":2,\"min\":2,\"max\":2}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"d\",\"start\":15000,\"end\":25000,\"count\":1,\"sum\":0,\"min\":0,\"max\":0}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"d\",\"start\":20000,\"end\":30000,\"count\":1,\"sum\":0,\"min\":0,\"max\":0}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"c\"}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"d\"}\n"
+recv stdout "{\"type\":\"end\",\"accepted\":5,\"late\":1}\n"
+exit 0
