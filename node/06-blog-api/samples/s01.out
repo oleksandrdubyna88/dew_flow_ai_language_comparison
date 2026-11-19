@@ -1,0 +1,12 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"ann","email":"ann@example.org","bio":null,"image":null,"token":"${t}"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"ann","email":"ann@example.org","bio":null,"image":null,"token":"${t}"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"profile":{"username":"ann","bio":null,"image":null,"following":false}}
+exit 0

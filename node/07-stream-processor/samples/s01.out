@@ -1,0 +1,13 @@
+transcript 2
+ready
+# 1. Two events, no output yet.
+quiet stdout
+# 2. The watermark advances to 23000: two windows close.
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":5000,\"end\":15000,\"count\":2,\"sum\":12,\"min\":5,\"max\":7}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":10000,\"end\":20000,\"count\":2,\"sum\":12,\"min\":5,\"max\":7}\n"
+# 3. End of input: the flush.
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":20000,\"end\":30000,\"count\":1,\"sum\":1,\"min\":1,\"max\":1}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":25000,\"end\":35000,\"count\":1,\"sum\":1,\"min\":1,\"max\":1}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"a\"}\n"
+recv stdout "{\"type\":\"end\",\"accepted\":3,\"late\":0}\n"
+exit 0

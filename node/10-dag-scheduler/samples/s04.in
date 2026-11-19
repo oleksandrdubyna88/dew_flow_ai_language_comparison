@@ -1,0 +1,35 @@
+scenario 2
+# Rejected submissions keep nothing: a cycle, an unknown dependency, a
+# duplicate job id, a reused DAG id. A dependency named twice counts once.
+# Cancelling a DAG ends its running attempt at the current time and
+# cancels the rest; a report of an unknown DAG is an error.
+default within 2s
+env SLOTS "1"
+start ready port within 10s
+connect c1 tcp
+# 1. Rejected: a cycle through three jobs; a dependency on no job; two jobs named x.
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"a\",\"deps\":[\"c\"],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"b\",\"deps\":[\"a\"],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"c\",\"deps\":[\"b\"],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"a\",\"deps\":[\"z\"],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"x\",\"deps\":[],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"x\",\"deps\":[],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+# 2. Accepted: p, then q which names p twice; the same DAG id is then refused.
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"p\",\"deps\":[],\"duration\":100,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]},{\"id\":\"q\",\"deps\":[\"p\",\"p\"],\"duration\":100,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"submit\",\"dag\":\"d1\",\"backoff\":{\"base\":100,\"cap\":800},\"jobs\":[{\"id\":\"a\",\"deps\":[],\"duration\":10,\"timeout\":0,\"retries\":0,\"results\":[\"ok\"]}]}\n"
+recv c1 lines 1
+# 3. 50 ms in, cancel d1: p's attempt ends at 50 as cancelled, q is cancelled, the DAG is done.
+send c1 "{\"cmd\":\"tick\",\"ms\":50}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"cancel\",\"dag\":\"d1\"}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d1\"}\n"
+recv c1 lines 1
+send c1 "{\"cmd\":\"report\",\"dag\":\"d9\"}\n"
+recv c1 lines 1
+# 4. The stop: the report of the one accepted DAG.
+close c1
+signal TERM
+recv stdout lines 1
+wait-exit within 5s

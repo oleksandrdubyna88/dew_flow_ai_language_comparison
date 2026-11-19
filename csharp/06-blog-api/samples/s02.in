@@ -1,0 +1,33 @@
+scenario 2
+# Login after registration; an article with tags, read back by its slug
+# anonymously; the tag list in byte order.
+default within 2s
+env JWT_SECRET "sample-secret"
+env TOKEN_TTL_SECONDS "3600"
+start ready port within 10s
+connect c http
+
+request c POST "/api/users"
+  header "content-type" "application/json"
+  body json {"user":{"username":"bob","email":"bob@example.org","password":"hunter2hunter2"}}
+recv c
+
+request c POST "/api/users/login"
+  header "content-type" "application/json"
+  body json {"user":{"email":"bob@example.org","password":"hunter2hunter2"}}
+recv c capture t json $.user.token as token
+
+request c POST "/api/articles"
+  header "content-type" "application/json"
+  header "authorization" "Token ${t}"
+  body json {"article":{"title":"Hello, World!","description":"A first post","body":"Some text.","tagList":["intro","Go","go","intro"]}}
+recv c capture created json $.article.createdAt as ts
+
+request c GET "/api/articles/hello-world"
+recv c
+
+request c GET "/api/tags"
+recv c
+
+signal TERM
+wait-exit within 5s

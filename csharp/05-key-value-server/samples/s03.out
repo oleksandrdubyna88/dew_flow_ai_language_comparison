@@ -1,0 +1,11 @@
+transcript 2
+ready
+recv c1 "+OK\r\n"
+recv c1 "$5\r\nmango\r\n"
+recv c1 "$-1\r\n"
+recv c1 ":0\r\n"
+recv c1 "+OK\r\n"
+recv c1 ":1\r\n"
+recv c1 "$5\r\nmango\r\n"
+recv c1 "$-1\r\n"
+exit 0

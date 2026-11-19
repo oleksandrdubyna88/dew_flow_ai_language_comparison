@@ -1,0 +1,22 @@
+scenario 2
+# A set with a string value, two increments and a read in one rule; the rule's
+# token read back; then nulls given and returned, a rounding and a shift.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"tickets","set":"stride","value":"3"},{"object":"tickets","call":"increment"},{"object":"tickets","call":"increment"},{"object":"tickets","get":"count"}]}
+recv c capture r json $.rule as token
+
+request c GET "/rules/${r}"
+recv c
+
+request c POST "/rules"
+  header "content-type" "application/json"
+  body json {"steps":[{"object":"tickets","call":"cap","args":[null]},{"object":"attic","get":"label"},{"object":"boiler","call":"rounded","args":[0]},{"object":"boiler","call":"shift","args":[0.5]}]}
+recv c
+
+signal TERM
+wait-exit within 5s

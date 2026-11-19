@@ -1,0 +1,52 @@
+scenario 2
+# One key: the same body again gives the same reply and no second effect; a
+# different body gives 409; a new key gives a new transfer.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"10.00"}
+recv c capture a json $.account.id as uuid
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"0.00"}
+recv c capture b json $.account.id as uuid
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "pay-7"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c capture t json $.transfer.id as uuid
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "pay-7"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "pay-7"
+  body json {"from":"${a}","to":"${b}","amount":"3.00"}
+recv c
+
+request c GET "/accounts/${a}"
+recv c
+
+request c GET "/transfers/${t}"
+recv c
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "pay-8"
+  body json {"from":"${a}","to":"${b}","amount":"2.00"}
+recv c capture u json $.transfer.id as uuid
+
+request c GET "/accounts/${b}"
+recv c
+
+signal TERM
+wait-exit within 5s

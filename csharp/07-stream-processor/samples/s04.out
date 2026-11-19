@@ -1,0 +1,16 @@
+transcript 2
+ready
+# 1. a has events at 6000 and 7000: windows [0,10000) and [5000,15000).
+quiet stdout
+# 2. t at 13000: the watermark is 10000, and [0,10000) ends at 10000, so it closes.
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":0,\"end\":10000,\"count\":2,\"sum\":13,\"min\":6,\"max\":7}\n"
+# 3. t at 18000: the watermark is 15000; a's last window closes and a expires.
+recv stdout "{\"type\":\"window\",\"key\":\"a\",\"start\":5000,\"end\":15000,\"count\":2,\"sum\":13,\"min\":6,\"max\":7}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"t\",\"start\":5000,\"end\":15000,\"count\":1,\"sum\":0,\"min\":0,\"max\":0}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"a\"}\n"
+# 4. The stop.
+recv stdout "{\"type\":\"window\",\"key\":\"t\",\"start\":10000,\"end\":20000,\"count\":2,\"sum\":0,\"min\":0,\"max\":0}\n"
+recv stdout "{\"type\":\"window\",\"key\":\"t\",\"start\":15000,\"end\":25000,\"count\":1,\"sum\":0,\"min\":0,\"max\":0}\n"
+recv stdout "{\"type\":\"expired\",\"key\":\"t\"}\n"
+recv stdout "{\"type\":\"end\",\"accepted\":4,\"late\":0}\n"
+exit 0

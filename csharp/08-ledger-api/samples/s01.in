@@ -1,0 +1,34 @@
+scenario 2
+# Two accounts, one transfer with its fee; the balances and the collected
+# total afterwards.
+default within 2s
+start ready port within 10s
+connect c http
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"100.00"}
+recv c capture a json $.account.id as uuid
+
+request c POST "/accounts"
+  header "content-type" "application/json"
+  body json {"openingBalance":"0.00"}
+recv c capture b json $.account.id as uuid
+
+request c POST "/transfers"
+  header "content-type" "application/json"
+  header "idempotency-key" "k-1"
+  body json {"from":"${a}","to":"${b}","amount":"40.00"}
+recv c capture t json $.transfer.id as uuid
+
+request c GET "/accounts/${a}"
+recv c
+
+request c GET "/accounts/${b}"
+recv c
+
+request c GET "/fees"
+recv c
+
+signal TERM
+wait-exit within 5s

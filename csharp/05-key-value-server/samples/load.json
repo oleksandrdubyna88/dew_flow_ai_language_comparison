@@ -1,0 +1,8 @@
+{
+  "memoryLimitBytes": 536870912,
+  "memoryLimitMiB": 512,
+  "heap": {
+    "DOTNET_GCHeapHardLimit": "0x1ccccccc"
+  },
+  "note": "the enforced memory limit of every test; the program is stopped above it"
+}

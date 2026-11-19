@@ -1,0 +1,18 @@
+transcript 2
+ready
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"bob","email":"bob@example.org","bio":null,"image":null,"token":"${:token}"}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"user":{"username":"bob","email":"bob@example.org","bio":null,"image":null,"token":"${t}"}}
+reply c 201
+  header "content-type" "application/json; charset=utf-8"
+  body json {"article":{"slug":"hello-world","title":"Hello, World!","description":"A first post","body":"Some text.","tagList":["intro","Go","go"],"createdAt":"${:ts~10s}","updatedAt":"${created}","author":{"username":"bob","bio":null,"image":null,"following":false}}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"article":{"slug":"hello-world","title":"Hello, World!","description":"A first post","body":"Some text.","tagList":["intro","Go","go"],"createdAt":"${created}","updatedAt":"${created}","author":{"username":"bob","bio":null,"image":null,"following":false}}}
+reply c 200
+  header "content-type" "application/json; charset=utf-8"
+  body json {"tags":["Go","go","intro"]}
+exit 0

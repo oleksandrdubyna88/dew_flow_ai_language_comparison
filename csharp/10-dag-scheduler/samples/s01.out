@@ -1,0 +1,14 @@
+transcript 2
+ready
+# 1. Submit; a starts at 0, b waits for a.
+recv c1 "{\"ok\":true}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":0,\"done\":false,\"jobs\":[{\"id\":\"a\",\"state\":\"running\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":null,\"result\":null}]},{\"id\":\"b\",\"state\":\"pending\",\"attempts\":[]}]}}\n"
+# 2. 100 ms: a ends with ok, b starts.
+recv c1 "{\"ok\":true,\"now\":100}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":100,\"done\":false,\"jobs\":[{\"id\":\"a\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"ok\"}]},{\"id\":\"b\",\"state\":\"running\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":null,\"result\":null}]}]}}\n"
+# 3. 50 ms more: b ends; the DAG is done.
+recv c1 "{\"ok\":true,\"now\":150}\n"
+recv c1 "{\"ok\":true,\"report\":{\"dag\":\"d1\",\"now\":150,\"done\":true,\"jobs\":[{\"id\":\"a\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"ok\"}]},{\"id\":\"b\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":150,\"result\":\"ok\"}]}]}}\n"
+# 4. The stop.
+recv stdout "{\"dag\":\"d1\",\"now\":150,\"done\":true,\"jobs\":[{\"id\":\"a\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":0,\"end\":100,\"result\":\"ok\"}]},{\"id\":\"b\",\"state\":\"succeeded\",\"attempts\":[{\"n\":1,\"start\":100,\"end\":150,\"result\":\"ok\"}]}]}\n"
+exit 0
